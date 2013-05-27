@@ -105,6 +105,8 @@ static const struct {
 	{ "dmotor", mkmotordir, },
 	{ "pmotor", mkmotorpos, },
 
+	{ "teleruptor", mkteleruptor, },
+
 	{ "netio", mknetiolocal, },
 	{ "unix", mknetiounix, },
 	{ "udp4", mknetioudp4, },

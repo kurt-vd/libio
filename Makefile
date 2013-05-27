@@ -15,7 +15,8 @@ CPPFLAGS += -DLOCALVERSION=\"$(LOCALVERSION)\"
 
 libio.a: libio.o led.o inputev.o netio.o virtual.o shared.o \
 	applelight.o preset.o \
-	motor.o
+	motor.o \
+	teleruptor.o
 	ar crs $@ $^
 
 toggle: libio.a
