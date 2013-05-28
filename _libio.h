@@ -38,6 +38,10 @@ extern int libio_trace;
 
 extern void netio_sync(void);
 
+/* raw create function */
+extern struct iopar *create_libiopar(const char *str);
+
+/* real parameter constructors */
 extern struct iopar *mkled(const char *str);
 extern struct iopar *mkledbool(const char *str);
 extern struct iopar *mkbacklight(const char *str);

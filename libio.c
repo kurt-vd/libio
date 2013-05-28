@@ -146,28 +146,32 @@ empty_spot:
 	++tablespot;
 }
 
-int create_iopar(const char *str)
+struct iopar *create_libiopar(const char *str)
 {
 	const char *sep, *iostr;
 	int j, len;
-	struct iopar *iopar;
 
 	sep = strchr(str, ':');
 	if (!sep)
 		error(1, 0, "%s %s: no type", __func__, str);
 
-	iopar = NULL;
 	len = sep - str;
 	iostr = sep + 1;
 	for (j = 0; iotypes[j].prefix; ++j) {
-		if (!strncmp(iotypes[j].prefix, str, len)) {
-			iopar = iotypes[j].create(iostr);
-			if (iopar) {
-				add_iopar(iopar);
-				return iopar->id;
-			}
-			return -1;
-		}
+		if (!strncmp(iotypes[j].prefix, str, len))
+			return iotypes[j].create(iostr);
+	}
+	return NULL;
+}
+
+int create_iopar(const char *str)
+{
+	struct iopar *iopar;
+
+	iopar = create_libiopar(str);
+	if (iopar) {
+		add_iopar(iopar);
+		return iopar->id;
 	}
 	error(1, 0, "%s %s: unknown type", __func__, str);
 	return -1;
