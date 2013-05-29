@@ -68,6 +68,8 @@ static void load_presets_file(const char *file)
 		s.last = ptr;
 		if (!s.first)
 			s.first = ptr;
+		if (libio_trace >= 2)
+			fprintf(stderr, "%s: %s\t%s\n", file, key, value);
 	}
 	fclose(fp);
 	return;
@@ -78,6 +80,7 @@ static void load_presets(void)
 {
 	load_presets_file(".libio-presets");
 	load_presets_file("/etc/libio-presets.conf");
+	fflush(stderr);
 	s.loaded = 1;
 }
 
