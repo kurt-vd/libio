@@ -175,6 +175,8 @@ int create_iopar(const char *str)
 {
 	struct iopar *iopar;
 
+	if (!str)
+		return -1;
 	iopar = create_libiopar(str);
 	if (iopar) {
 		add_iopar(iopar);
