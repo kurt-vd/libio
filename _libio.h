@@ -42,6 +42,7 @@ extern void netio_sync(void);
 extern struct iopar *create_libiopar(const char *str);
 
 /* real parameter constructors */
+extern struct iopar *mkpreset(const char *str);
 extern struct iopar *mkled(const char *str);
 extern struct iopar *mkledbool(const char *str);
 extern struct iopar *mkbacklight(const char *str);

@@ -93,6 +93,7 @@ static const struct {
 	const char *prefix;
 	struct iopar *(*create)(const char *str);
 } iotypes[] = {
+	{ "preset", mkpreset, },
 	{ "led", mkled, },
 	{ "bled", mkledbool, },
 	{ "backlight", mkbacklight, },
