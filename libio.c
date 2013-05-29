@@ -101,6 +101,8 @@ static const struct {
 	{ "button", mkinputevbtn, },
 	{ "kbd", mkinputevbtn, },
 	{ "applelight", mkapplelight, },
+	{ "dmotor", mkmotordir, },
+	{ "pmotor", mkmotorpos, },
 
 	{ "netio", mknetiolocal, },
 	{ "unix", mknetiounix, },

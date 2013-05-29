@@ -55,6 +55,8 @@ extern struct iopar *mkledbool(const char *str);
 extern struct iopar *mkbacklight(const char *str);
 extern struct iopar *mkinputevbtn(const char *str);
 extern struct iopar *mkapplelight(const char *sysfs);
+extern struct iopar *mkmotordir(const char *cstr);
+extern struct iopar *mkmotorpos(const char *cstr);
 
 extern struct iopar *mknetiolocal(const char *uri);
 extern struct iopar *mknetiounix(const char *uri);
