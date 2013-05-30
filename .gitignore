@@ -4,6 +4,7 @@ libio.a
 toggle
 iofollow
 ioprobe
+macbookd
 
 config.mk
 tags

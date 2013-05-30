@@ -1,4 +1,4 @@
-default:	toggle iofollow ioprobe
+default:	toggle iofollow ioprobe macbookd
 
 LOCALVERSION	:= $(shell ./getlocalversion .)
 
@@ -22,6 +22,8 @@ toggle: libio.a
 iofollow: libio.a
 
 ioprobe: libio.a
+
+macbookd: libio.a
 
 clean:
 	rm -f libio.a toggle iofollow ioprobe $(wildcard *.o)
