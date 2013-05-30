@@ -174,7 +174,7 @@ int create_iopar(const char *str)
 		add_iopar(iopar);
 		return iopar->id;
 	}
-	error(1, 0, "%s %s: unknown type", __func__, str);
+	error(1, 0, "%s %s failed", __func__, str);
 	return -1;
 }
 
