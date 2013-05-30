@@ -337,7 +337,12 @@ static void read_iosocket(int fd, void *data)
 			continue;
 		switch (*dat) {
 		case '=':
-			/* update for remote parameter */
+			/* assign for remote parameter */
+			if (sk->flags & FL_MYPUBLIC_SOCK) {
+				error(0, 0, "assign %s via server socket", tok);
+				break;
+			}
+			/* assign */
 			*dat++ = 0;
 			par = find_param(tok, remote->params);
 			if (!par)
@@ -350,7 +355,7 @@ static void read_iosocket(int fd, void *data)
 				fprintf(stderr, "netio:%s %s\n", par->name, dat);
 			break;
 		case '>':
-			if (sk->flags & FL_MYPUBLIC_SOCK) {
+			if (!(sk->flags & FL_MYPUBLIC_SOCK)) {
 				error(0, 0, "write %s via client socket", tok);
 				break;
 			}
@@ -564,6 +569,7 @@ static struct iopar *mknetioremote(const char *uri, int family)
 		memcpy(&remote->name, &name, namelen);
 		add_ioremote(remote, sock);
 		if (sendto(sock->fd, "*subscribe\n", 10, 0, &name.sa, namelen) < 0) {
+			error(0, errno, "subscribe failed");
 			del_ioremote(remote);
 			free(remote);
 			goto fail_subscribe;
@@ -600,7 +606,7 @@ void netio_sync(void)
 {
 	struct ioremote *remote;
 	struct sockparam *par;
-	int len, commonlen, j, fail, success;
+	int len, j, fail, success;
 
 	if (!netio_dirty)
 		return;
@@ -613,16 +619,29 @@ void netio_sync(void)
 		par->iopar.state &= ~ST_DIRTY;
 	}
 
-	commonlen = len;
-
-	/* loop over remotes to send update to */
+	fail = success = 0;
 	for (j = 0; j < NIOSOCKETS; ++j) {
 		if (!pubsockets[j])
 			continue;
-		fail = success = 0;
 		for (remote = pubsockets[j]->remotes; remote; remote = remote->next) {
+			/* test if we need to send */
+			if (sendto(pubsockets[j]->fd, pktbuf, len, 0, &remote->name.sa, remote->namelen) < 0)
+				++fail;
+			else
+				++success;
+		}
+	}
+	if (fail && !success)
+		error(1, errno, "sendto failed");
+
+	/* loop over remotes to send update to */
+	fail = success = 0;
+	for (j = 0; j < NIOSOCKETS; ++j) {
+		if (!iosockets[j])
+			continue;
+		for (remote = iosockets[j]->remotes; remote; remote = remote->next) {
 			/* add remote waiting parameters */
-			len = commonlen;
+			len = 0;
 			for (par = remote->params; par; par = par->next) {
 				if (par->iopar.state & ST_WAITING) {
 					len += snprintf(pktbuf+len, NETIO_MTU-len, "%s>%lf\n",
@@ -631,9 +650,9 @@ void netio_sync(void)
 				}
 			}
 			/* test if we need to send */
-			if (!len || (!(remote->flags & FL_SENDTO) && (len == commonlen)))
+			if (!len)
 				continue;
-			if (sendto(pubsockets[j]->fd, pktbuf, len, 0, &remote->name.sa, remote->namelen) < 0)
+			if (sendto(iosockets[j]->fd, pktbuf, len, 0, &remote->name.sa, remote->namelen) < 0)
 				++fail;
 			else
 				++success;
