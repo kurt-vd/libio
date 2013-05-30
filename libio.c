@@ -154,7 +154,7 @@ struct iopar *create_libiopar(const char *str)
 
 	sep = strchr(str, ':');
 	if (!sep)
-		error(1, 0, "%s %s: no type", __func__, str);
+		return mkpreset(str);
 
 	len = sep - str;
 	iostr = sep + 1;
