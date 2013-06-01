@@ -184,6 +184,10 @@ int create_iopar(const char *str)
 	return -1;
 }
 
+void cleanup_libiopar(struct iopar *iopar)
+{
+}
+
 void destroy_iopar(int iopar_id)
 {
 	struct iopar *iopar = _lookup_iopar(iopar_id);
@@ -193,7 +197,10 @@ void destroy_iopar(int iopar_id)
 	/* iopar_id has proven valid here */
 	if (iopar->del)
 		iopar->del(iopar);
-	free(iopar);
+	else
+		/* default cleanup: we cannot do anything else here */
+		cleanup_libiopar(iopar);
+
 	table[iopar_id] = NULL;
 	if (iopar_id < tablespot)
 		tablespot = iopar_id;

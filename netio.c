@@ -507,6 +507,7 @@ static void del_sockparam_hook(struct iopar *iopar)
 	struct sockparam *par = (void *)iopar;
 
 	del_sockparam(par);
+	cleanup_libiopar(&par->iopar);
 	free(par);
 }
 

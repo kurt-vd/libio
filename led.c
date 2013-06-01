@@ -42,12 +42,21 @@ fail_open:
 	return -1;
 }
 
+static void del_led(struct iopar *iopar)
+{
+	struct led *led = (struct led *)iopar;
+
+	cleanup_libiopar(&led->iopar);
+	free(led);
+}
+
 struct iopar *mkled(const char *str)
 {
 	struct led *led;
 
 	led = zalloc(sizeof(*led));
 	asprintf(&led->sysfs, "/sys/class/leds/%s/brightness", str);
+	led->iopar.del = del_led;
 	led->iopar.set = led_set;
 	led->max = attr_read(255, "/sys/class/leds/%s/max_brightness", str);
 	led->iopar.value = attr_read(0, led->sysfs) / (double)led->max;

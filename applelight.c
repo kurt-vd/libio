@@ -70,6 +70,8 @@ static void del_applelight(struct iopar *iopar)
 	struct applelight *al = (void *)iopar;
 
 	evt_remove_timeout(applelight_timeout, al);
+	cleanup_libiopar(&al->iopar);
+	free(al);
 }
 
 struct iopar *mkapplelight(const char *sysfs)

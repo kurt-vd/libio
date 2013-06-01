@@ -177,6 +177,8 @@ static void del_evbtn_hook(struct iopar *iopar)
 	if (!btn->dev->btns)
 		/* this was the last button */
 		free_inputdev(btn->dev);
+	cleanup_libiopar(&btn->iopar);
+	free(btn);
 }
 
 struct iopar *mkinputevbtn(const char *cstr)
