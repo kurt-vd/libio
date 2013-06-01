@@ -121,7 +121,13 @@ void libio_set_trace(int value)
 static struct iopar **table;
 static int tablesize, tablespot = 1;
 
-static inline struct iopar *lookup_iopar(int iopar_id)
+static inline struct iopar *_lookup_iopar(int iopar_id)
+{
+	return ((iopar_id >= 0) && (iopar_id < tablesize)) ?
+		table[iopar_id] : NULL;
+}
+
+struct iopar *lookup_iopar(int iopar_id)
 {
 	return ((iopar_id >= 0) && (iopar_id < tablesize)) ?
 		table[iopar_id] : NULL;
@@ -180,7 +186,7 @@ int create_iopar(const char *str)
 
 void destroy_iopar(int iopar_id)
 {
-	struct iopar *iopar = lookup_iopar(iopar_id);
+	struct iopar *iopar = _lookup_iopar(iopar_id);
 
 	if (!iopar)
 		return;
@@ -196,7 +202,7 @@ void destroy_iopar(int iopar_id)
 /* iopar use */
 double get_iopar(int iopar_id, double default_value)
 {
-	struct iopar *iopar = lookup_iopar(iopar_id);
+	struct iopar *iopar = _lookup_iopar(iopar_id);
 
 	if (!iopar) {
 		errno = ENODEV;
@@ -207,7 +213,7 @@ double get_iopar(int iopar_id, double default_value)
 
 int set_iopar(int iopar_id, double value)
 {
-	struct iopar *iopar = lookup_iopar(iopar_id);
+	struct iopar *iopar = _lookup_iopar(iopar_id);
 	int ret;
 	double saved_value;
 
@@ -229,7 +235,7 @@ int set_iopar(int iopar_id, double value)
 
 int iopar_dirty(int iopar_id)
 {
-	struct iopar *iopar = lookup_iopar(iopar_id);
+	struct iopar *iopar = _lookup_iopar(iopar_id);
 
 	if (!iopar) {
 		errno = ENODEV;
@@ -240,7 +246,7 @@ int iopar_dirty(int iopar_id)
 
 int iopar_present(int iopar_id)
 {
-	struct iopar *iopar = lookup_iopar(iopar_id);
+	struct iopar *iopar = _lookup_iopar(iopar_id);
 
 	if (!iopar) {
 		errno = ENODEV;
@@ -251,7 +257,7 @@ int iopar_present(int iopar_id)
 
 int iopar_set_writeable(int iopar_id)
 {
-	struct iopar *iopar = lookup_iopar(iopar_id);
+	struct iopar *iopar = _lookup_iopar(iopar_id);
 
 	if (!iopar) {
 		errno = ENODEV;
@@ -264,7 +270,7 @@ int iopar_set_writeable(int iopar_id)
 
 int iopar_set_pushbtn(int iopar_id)
 {
-	struct iopar *iopar = lookup_iopar(iopar_id);
+	struct iopar *iopar = _lookup_iopar(iopar_id);
 
 	if (!iopar) {
 		errno = ENODEV;

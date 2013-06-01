@@ -41,6 +41,9 @@ extern void netio_sync(void);
 /* raw create function */
 extern struct iopar *create_libiopar(const char *str);
 
+/* in-library access to parameter table for #id to struct lookup */
+extern struct iopar *lookup_iopar(int iopar_id);
+
 /* real parameter constructors */
 extern struct iopar *mkpreset(const char *str);
 extern struct iopar *mkled(const char *str);
