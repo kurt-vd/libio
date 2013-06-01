@@ -13,7 +13,7 @@ CPPFLAGS += -DLOCALVERSION=\"$(LOCALVERSION)\"
 %: %.c
 	$(CC) -o $@ -DNAME=\"$@\" $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
 
-libio.a: libio.o led.o inputev.o netio.o \
+libio.a: libio.o led.o inputev.o netio.o virtual.o \
 	applelight.o preset.o
 	ar crs $@ $^
 
