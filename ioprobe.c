@@ -21,6 +21,7 @@ static const char help_msg[] =
 	"Options:\n"
 	" -V, --version		Show version\n"
 	" -v, --verbose		Be more verbose\n"
+	" -f, --follow		Keep reading\n"
 	;
 
 #ifdef _GNU_SOURCE
@@ -28,6 +29,7 @@ static const struct option long_opts[] = {
 	{ "help", no_argument, NULL, '?', },
 	{ "version", no_argument, NULL, 'V', },
 	{ "verbose", no_argument, NULL, 'v', },
+	{ "follow", no_argument, NULL, 'f', },
 	{ },
 };
 
@@ -36,7 +38,7 @@ static const struct option long_opts[] = {
 	getopt((argc), (argv), (optstring))
 #endif
 
-static const char optstring[] = "+?Vvs";
+static const char optstring[] = "+?Vvsf";
 
 static struct args {
 	int verbose;
@@ -46,7 +48,7 @@ int main(int argc, char *argv[])
 {
 	int opt;
 	/* parameter indices */
-	int param;
+	int param, follow = 0;
 	int actionchar = 'g'; /* '+' | '-' */
 	double modvalue = 0;
 
@@ -57,6 +59,9 @@ int main(int argc, char *argv[])
 		return 0;
 	case 'v':
 		++s.verbose;
+		break;
+	case 'f':
+		follow = 1;
 		break;
 	case '?':
 	default:
@@ -77,6 +82,7 @@ int main(int argc, char *argv[])
 		modvalue = strtod(argv[optind] ?: "1", 0);
 	}
 
+	if (!follow)
 	schedule_itimer(2);
 
 	/* main ... */
@@ -87,7 +93,8 @@ int main(int argc, char *argv[])
 			default:
 			case 'g':
 				printf("%.3f\n", value);
-				return 0;
+				if (!follow)
+					return 0;
 				break;
 			case 'd':
 				modvalue = -modvalue;
