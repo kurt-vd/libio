@@ -39,6 +39,11 @@ static int lookup_motor_type(const char *str)
 struct motor {
 	/* usage counter of this struct */
 	int refcnt;
+	int state;
+		#define ST_IDLE		0
+		#define ST_BUSY		1
+		#define ST_WAIT		2 /* implement cooldown period */
+	#define COOLDOWN_TIME	0.2
 	/* how to combine 2 outputs to 1 motor */
 	int type;
 	/* backend gpio/pwm's */
@@ -143,6 +148,7 @@ static inline double next_wakeup(struct motor *mot)
 static void motor_handler(void *dat)
 {
 	struct motor *mot = dat;
+	double oldspeed;
 
 	motor_update_position(mot);
 
@@ -152,9 +158,18 @@ static void motor_handler(void *dat)
 	else if ((motor_curr_speed(mot) > 0) && (motor_curr_position(mot) >= 1+HYST))
 		mot->reqspeed = 0;
 
+	oldspeed = motor_curr_speed(mot);
 	change_motor_speed(mot, mot->reqspeed);
-	if (motor_curr_speed(mot) != 0)
+	if (motor_curr_speed(mot) != 0) {
+		mot->state = ST_BUSY;
 		evt_add_timeout(next_wakeup(mot), motor_handler, mot);
+	} else if (oldspeed != 0) {
+		/* go into cooldown state for a bit */
+		mot->state = ST_WAIT;
+		evt_add_timeout(COOLDOWN_TIME, motor_handler, mot);
+	} else
+		/* return to idle */
+		mot->state = ST_IDLE;
 }
 
 /* iopar methods */
@@ -176,7 +191,8 @@ static int set_motor_dir(struct iopar *iopar, double newvalue)
 			((newvalue < 0) && (motor_curr_position(mot) <= 0)))
 		return -1;
 	mot->reqspeed = newvalue;
-	motor_handler(mot);
+	if (mot->state != ST_WAIT)
+		motor_handler(mot);
 	return 0;
 }
 
