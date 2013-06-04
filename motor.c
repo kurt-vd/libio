@@ -46,6 +46,8 @@ struct motor {
 
 	/* direction control */
 	struct iopar dirpar;
+	/* requested, but postponed, direction */
+	int reqspeed;
 
 	/* position control */
 	struct iopar pospar;
@@ -146,10 +148,12 @@ static void motor_handler(void *dat)
 
 	/* test for end-of-course statuses */
 	if ((motor_curr_speed(mot) < 0) && (motor_curr_position(mot) <= 0-HYST))
-		change_motor_speed(mot, 0);
+		mot->reqspeed = 0;
 	else if ((motor_curr_speed(mot) > 0) && (motor_curr_position(mot) >= 1+HYST))
-		change_motor_speed(mot, 0);
-	else if (motor_curr_speed(mot) != 0)
+		mot->reqspeed = 0;
+
+	change_motor_speed(mot, mot->reqspeed);
+	if (motor_curr_speed(mot) != 0)
 		evt_add_timeout(next_wakeup(mot), motor_handler, mot);
 }
 
@@ -171,9 +175,8 @@ static int set_motor_dir(struct iopar *iopar, double newvalue)
 	if (((newvalue > 0) && (motor_curr_position(mot) >= 1)) ||
 			((newvalue < 0) && (motor_curr_position(mot) <= 0)))
 		return -1;
-	change_motor_speed(mot, newvalue);
-	if (newvalue != 0)
-		evt_add_timeout(next_wakeup(mot), motor_handler, mot);
+	mot->reqspeed = newvalue;
+	motor_handler(mot);
 	return 0;
 }
 
