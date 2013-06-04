@@ -16,12 +16,6 @@ extern int attr_read(int default_value, const char *fmt, ...)
 extern int attr_write(int value, const char *fmt, ...)
 	__attribute__((format(printf,2,3)));
 
-/* Fit value within borders */
-static inline int fit_int(int val, int min, int max)
-{
-	return (val < min) ? min : ((val > max) ? max : val);
-}
-
 /* set single event with itimer */
 extern int schedule_itimer(double value);
 

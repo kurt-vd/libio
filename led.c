@@ -12,6 +12,11 @@ struct led {
 	int max;
 };
 
+static inline int fit_int(int val, int min, int max)
+{
+	return (val < min) ? min : ((val > max) ? max : val);
+}
+
 static int led_set(struct iopar *iopar, double value)
 {
 	struct led *led = (struct led *)iopar;
@@ -24,7 +29,7 @@ static int led_set(struct iopar *iopar, double value)
 			error(0, errno, "fopen %s", led->sysfs);
 		goto fail_open;
 	}
-	ret = fprintf(fp, "%u", fit_int(value, 0, led->max));
+	ret = fprintf(fp, "%u", fit_int(value*led->max, 0, led->max));
 	if (ret < 0) {
 		if (led->iopar.state & ST_PRESENT)
 			error(0, errno, "fwrite %s", led->sysfs);
