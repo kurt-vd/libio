@@ -44,6 +44,10 @@ struct motor {
 		#define ST_BUSY		1
 		#define ST_WAIT		2 /* implement cooldown period */
 	#define COOLDOWN_TIME	0.2
+	int ctrltype;
+		#define CTRL_NONE	0
+		#define CTRL_POS	1 /* control position */
+		#define CTRL_DIR	2 /* control speed/dir */
 	/* how to combine 2 outputs to 1 motor */
 	int type;
 	/* backend gpio/pwm's */
@@ -58,11 +62,11 @@ struct motor {
 	struct iopar pospar;
 	/* time of last sample */
 	double lasttime;
-		#define HYST	0.002
 		#define UPDINT	0.5
-		#define WAITTIME 0.5
 	/* (calibrated) maximum that equals 1.0 */
 	double maxval;
+	/* requested position */
+	double setpoint;
 };
 
 /* find motor struct */
@@ -97,35 +101,55 @@ static void motor_update_position(struct motor *mot)
 	double currtime;
 
 	currtime = libevt_now();
-	mot->pospar.value += motor_curr_speed(mot) * (currtime - mot->lasttime);
-	mot->lasttime = currtime;
-	if (motor_curr_speed(mot) != 0)
+	if (motor_curr_speed(mot) != 0) {
+		mot->pospar.value +=
+			(motor_curr_speed(mot) * (currtime - mot->lasttime)) /
+			mot->maxval;
 		iopar_set_dirty(&mot->pospar);
+		if (libio_trace >= 2)
+			printf("motor %.3lf: position %.3lf %.3lf\n", libevt_now(),
+					mot->pospar.value,
+					mot->pospar.value*mot->maxval);
+	}
+	mot->lasttime = currtime;
 }
 
 /* actually set the GPIO's for the motor. caller should deal with timeouts */
-static void change_motor_speed(struct motor *mot, double speed)
+static int change_motor_speed(struct motor *mot, double speed)
 {
 	if (speed == 0) {
-		set_iopar(mot->out2, 0);
-		set_iopar(mot->out1, 0);
-		/* final update of value */
-		motor_update_position(mot);
+		/* writing FP_NAN should not fail */
+		set_iopar(mot->out2, FP_NAN);
+		set_iopar(mot->out1, FP_NAN);
 	} else if (speed > 0) {
-		set_iopar(mot->out2, 0);
-		set_iopar(mot->out1, speed);
+		if (set_iopar(mot->out2, 0) < 0)
+			goto failed;
+		if (set_iopar(mot->out1, speed) < 0)
+			goto failed;
 	} else if (speed < 0) {
 		if (mot->type == TYPE_GODIR) {
-			set_iopar(mot->out2, 1);
-			set_iopar(mot->out1, speed);
+			if (set_iopar(mot->out2, 1) < 0)
+				goto failed;
+			if (set_iopar(mot->out1, -speed) < 0)
+				goto failed;
 		} else {
-			set_iopar(mot->out1, 0);
-			set_iopar(mot->out2, speed);
+			if (set_iopar(mot->out1, 0) < 0)
+				goto failed;
+			if (set_iopar(mot->out2, -speed) < 0)
+				goto failed;
 		}
 	}
 	motor_update_position(mot);
+	if (libio_trace >= 2)
+		printf("motor %.3lf: speed %.3lf\n", libevt_now(), speed);
 	mot->dirpar.value = speed;
 	iopar_set_dirty(&mot->dirpar);
+	return 0;
+failed:
+	/* writing FP_NAN should not fail */
+	set_iopar(mot->out2, FP_NAN);
+	set_iopar(mot->out1, FP_NAN);
+	return -1;
 }
 
 static inline double next_wakeup(struct motor *mot)
@@ -133,9 +157,15 @@ static inline double next_wakeup(struct motor *mot)
 	double result;
 	double endpoint;
 
-	endpoint = (motor_curr_speed(mot) < 0) ? (0 - HYST) : (1 + HYST);
+	if (mot->state == ST_WAIT)
+		return COOLDOWN_TIME;
 
-	result = mot->lasttime + fabs(endpoint - motor_curr_position(mot)) - libevt_now();
+	if (mot->ctrltype == CTRL_POS)
+		endpoint = mot->setpoint;
+	else
+		endpoint = (motor_curr_speed(mot) < 0) ? 0 : 1;
+
+	result = mot->lasttime + fabs(endpoint - motor_curr_position(mot))*mot->maxval - libevt_now();
 	/* optimization */
 	if (result <= UPDINT)
 		return result;
@@ -151,41 +181,103 @@ static void motor_handler(void *dat)
 	double oldspeed;
 
 	motor_update_position(mot);
-
-	/* test for end-of-course statuses */
-	if ((motor_curr_speed(mot) < 0) && (motor_curr_position(mot) <= 0-HYST))
-		mot->reqspeed = 0;
-	else if ((motor_curr_speed(mot) > 0) && (motor_curr_position(mot) >= 1+HYST))
-		mot->reqspeed = 0;
-
-	oldspeed = motor_curr_speed(mot);
-	change_motor_speed(mot, mot->reqspeed);
-	if (motor_curr_speed(mot) != 0) {
-		mot->state = ST_BUSY;
-		evt_add_timeout(next_wakeup(mot), motor_handler, mot);
-	} else if (oldspeed != 0) {
-		/* go into cooldown state for a bit */
-		mot->state = ST_WAIT;
-		evt_add_timeout(COOLDOWN_TIME, motor_handler, mot);
-	} else
-		/* return to idle */
+	if (mot->state == ST_WAIT)
 		mot->state = ST_IDLE;
+
+	if (mot->ctrltype == CTRL_POS) {
+		if (fabs(motor_curr_position(mot) - mot->setpoint)*mot->maxval < 0.01) {
+			if (motor_curr_speed(mot) != 0) {
+				if (change_motor_speed(mot, 0) < 0)
+					goto repeat;
+				mot->state = ST_WAIT;
+			}
+		} else if (motor_curr_position(mot) < mot->setpoint) {
+			if (motor_curr_speed(mot) < 0) {
+				if (change_motor_speed(mot, 0) < 0)
+					goto repeat;
+				mot->state = ST_WAIT;
+			} else if (motor_curr_speed(mot) == 0) {
+				if (change_motor_speed(mot, 1) < 0)
+					goto repeat;
+				mot->state = ST_BUSY;
+			}
+		} else /*if (motor_curr_position(mot) > mot->setpoint) */{
+			if (motor_curr_speed(mot) > 0) {
+				if (change_motor_speed(mot, 0) < 0)
+					goto repeat;
+				mot->state = ST_WAIT;
+			} else if (motor_curr_speed(mot) == 0) {
+				if (change_motor_speed(mot, -1) < 0)
+					goto repeat;
+				mot->state = ST_BUSY;
+			}
+		}
+		if (mot->state != ST_IDLE)
+			evt_add_timeout(next_wakeup(mot), motor_handler, mot);
+		return;
+repeat:
+		evt_add_timeout(0.5, motor_handler, mot);
+	} else {
+		/* DIR control */
+
+		/* test for end-of-course statuses */
+		if ((mot->reqspeed < 0) && (motor_curr_position(mot) <= 0))
+			mot->reqspeed = 0;
+		else if ((mot->reqspeed > 0) && (motor_curr_position(mot) >= 1))
+			mot->reqspeed = 0;
+
+		oldspeed = motor_curr_speed(mot);
+		if (fabs(oldspeed - mot->reqspeed) > 0.01) {
+			/* speed must change */
+			if (change_motor_speed(mot, mot->reqspeed) < 0) {
+				/* repeat */
+				evt_add_timeout(0.5, motor_handler, mot);
+				return;
+			}
+		}
+
+		if (motor_curr_speed(mot) != 0) {
+			mot->state = ST_BUSY;
+			evt_add_timeout(next_wakeup(mot), motor_handler, mot);
+		} else if (oldspeed != 0) {
+			/* go into cooldown state for a bit */
+			mot->state = ST_WAIT;
+			evt_add_timeout(next_wakeup(mot), motor_handler, mot);
+		} else
+			mot->state = ST_IDLE;
+	}
+}
+
+static inline void call_motor_handler(struct motor *mot)
+{
+	if (mot->state != ST_WAIT)
+		motor_handler(mot);
 }
 
 /* iopar methods */
 static int set_motor_pos(struct iopar *iopar, double newvalue)
 {
-#if 0
 	struct motor *mot = pospar2motor(iopar);
-#endif
 
-	return -1;
+	if (mot->ctrltype == CTRL_NONE)
+		mot->ctrltype = CTRL_POS;
+	mot->setpoint = newvalue;
+	call_motor_handler(mot);
+	return 0;
 }
 
 static int set_motor_dir(struct iopar *iopar, double newvalue)
 {
 	struct motor *mot = dirpar2motor(iopar);
 
+	if (isnan(newvalue)) {
+		/* revert to position control */
+		mot->ctrltype = CTRL_POS;
+		call_motor_handler(mot);
+		return 0;
+	}
+
+	mot->ctrltype = CTRL_DIR;
 	/* test for end-of-course positions */
 	if (((newvalue > 0) && (motor_curr_position(mot) >= 1)) ||
 			((newvalue < 0) && (motor_curr_position(mot) <= 0))) {
@@ -194,8 +286,7 @@ static int set_motor_dir(struct iopar *iopar, double newvalue)
 		return -1;
 	}
 	mot->reqspeed = newvalue;
-	if (mot->state != ST_WAIT)
-		motor_handler(mot);
+	call_motor_handler(mot);
 	return 0;
 }
 
@@ -212,7 +303,6 @@ static void del_motor_pos(struct iopar *iopar)
 {
 	return del_motor_dir(&(pospar2motor(iopar))->dirpar);
 }
-
 
 /*
  * constructors:
