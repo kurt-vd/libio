@@ -50,6 +50,7 @@ extern void cleanup_libiopar(struct iopar *iopar);
 /* real parameter constructors */
 extern struct iopar *mkpreset(const char *str);
 extern struct iopar *mkvirtual(const char *str);
+extern struct iopar *mkshared(const char *cstr);
 extern struct iopar *mkled(const char *str);
 extern struct iopar *mkledbool(const char *str);
 extern struct iopar *mkbacklight(const char *str);

@@ -95,6 +95,7 @@ static const struct {
 } iotypes[] = {
 	{ "preset", mkpreset, },
 	{ "virtual", mkvirtual, },
+	{ "shared", mkshared, },
 	{ "led", mkled, },
 	{ "bled", mkledbool, },
 	{ "backlight", mkbacklight, },
