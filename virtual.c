@@ -32,7 +32,10 @@ static int set_virtual(struct iopar *iopar, double value)
 
 	/* print state */
 	for (j = 0, str = buf; j < sizeof(int)*8; ++j) {
-		*str++ = (state & (1 << j)) ? 'x' : '-';
+		if (j == virt->index)
+			*str++ = (state & mask) ? 'X' : '_';
+		else
+			*str++ = (state & (1 << j)) ? 'x' : '-';
 		if ((j & 3) == 3)
 			*str++ = ' ';
 	}
