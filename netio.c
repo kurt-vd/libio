@@ -511,12 +511,12 @@ static void del_sockparam_hook(struct iopar *iopar)
 	free(par);
 }
 
-struct iopar *mknetiolocal(const char *uri)
+struct iopar *mknetiolocal(const char *name)
 {
 	struct sockparam *par;
 
-	par = zalloc(sizeof(*par) + strlen(uri));
-	strcpy(par->name, uri);
+	par = zalloc(sizeof(*par) + strlen(name));
+	strcpy(par->name, name);
 	par->iopar.del = del_sockparam_hook;
 	par->iopar.set = set_sockparam;
 	par->iopar.value = 0;
