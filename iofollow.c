@@ -92,8 +92,7 @@ int main(int argc, char *argv[])
 
 	indev = create_iopar(argv[optind++]);
 	outdev = create_iopar(argv[optind++]);
-	uoffset = create_iopar("netio:offset");
-	iopar_set_writeable(uoffset);
+	uoffset = create_iopar("netio:+offset");
 	set_iopar(uoffset, 0);
 
 	/* main ... */

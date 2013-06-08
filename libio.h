@@ -33,9 +33,6 @@ extern int iopar_dirty(int iopar);
 /* return true when iopar is lost */
 extern int iopar_present(int iopar);
 
-/* allow remote writes on parameter */
-extern int iopar_set_writeable(int iopar);
-
 /*
  * Only signal (aka. dirty) 'on' state
  * This will affect only some types of iopar's!

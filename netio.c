@@ -30,6 +30,8 @@ struct sockparam {
 	struct ioremote *remote;
 	struct sockparam *next;
 	double newvalue;
+	int state;
+		#define ST_WRITABLE	0x01
 
 	char name[2];
 };
@@ -364,7 +366,7 @@ static void read_iosocket(int fd, void *data)
 			par = find_param(tok, localparams);
 			if (!par)
 				break;
-			if (!(par->iopar.state & ST_WRITABLE)) {
+			if (!(par->state & ST_WRITABLE)) {
 				/* write-protect readonly parameters */
 				error(0, 0, "remote writes %s, refused!", par->name);
 				break;
@@ -516,6 +518,10 @@ struct iopar *mknetiolocal(const char *name)
 	struct sockparam *par;
 
 	par = zalloc(sizeof(*par) + strlen(name));
+	if (*name == '+') {
+		par->state |= ST_WRITABLE;
+		++name;
+	}
 	strcpy(par->name, name);
 	par->iopar.del = del_sockparam_hook;
 	par->iopar.set = set_sockparam;

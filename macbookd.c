@@ -118,10 +118,8 @@ int main(int argc, char *argv[])
 	nlight = create_iopar("netio:light");
 	nkbd = create_iopar("netio:kbd");
 	nbl = create_iopar("netio:backlight");
-	okbd = create_iopar("netio:+kbd");
-	obl = create_iopar("netio:+backlight");
-	iopar_set_writeable(okbd);
-	iopar_set_writeable(obl);
+	okbd = create_iopar("netio:++kbd");
+	obl = create_iopar("netio:++backlight");
 
 	set_iopar(okbd, 0);
 	set_iopar(obl, 0);
