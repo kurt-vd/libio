@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <math.h>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -33,6 +34,7 @@ struct sockparam {
 	int state;
 		#define ST_WRITABLE	0x01
 		#define ST_WAITING	0x02 /* waiting for transmission, ... */
+		#define ST_NEW		0x04 /* newly created: transmit without dirty ... */
 
 	char name[2];
 };
@@ -526,8 +528,9 @@ struct iopar *mknetiolocal(const char *name)
 	strcpy(par->name, name);
 	par->iopar.del = del_sockparam_hook;
 	par->iopar.set = set_sockparam;
-	par->iopar.value = 0;
-	iopar_set_dirty(&par->iopar);
+	par->iopar.value = FP_NAN;
+	/* trigger initial transmission */
+	par->state |= ST_NEW;
 	netio_dirty = 1;
 
 	/* register sockparam */
@@ -620,11 +623,14 @@ void netio_sync(void)
 		return;
 	/* prepare local parameters update packet */
 	for (len = 0, par = localparams; par; par = par->next) {
-		if (!(par->iopar.state & ST_DIRTY))
-			continue;
-		len += snprintf(pktbuf+len, NETIO_MTU-len, "%s=%lf\n",
-				par->name, par->iopar.value);
-		par->iopar.state &= ~ST_DIRTY;
+		if (par->state & ST_NEW) {
+			len += snprintf(pktbuf+len, NETIO_MTU-len, "%s=%lf\n",
+					par->name, par->iopar.value);
+			par->state &= ~ST_NEW;
+
+		} else if (par->iopar.state & ST_DIRTY)
+			len += snprintf(pktbuf+len, NETIO_MTU-len, "%s=%lf\n",
+					par->name, par->iopar.value);
 	}
 
 	fail = success = 0;
