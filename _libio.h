@@ -8,7 +8,6 @@ struct iopar {
 	int id;
 	int state;
 #define ST_DIRTY	0x01
-#define ST_WAITING	0x02 /* waiting for transmission, ... */
 #define ST_PRESENT	0x08 /* parameter has real data */
 #define ST_PUSHBTN	0x10 /* for input device: only signal 'on' state */
 	double value;

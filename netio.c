@@ -32,6 +32,7 @@ struct sockparam {
 	double newvalue;
 	int state;
 		#define ST_WRITABLE	0x01
+		#define ST_WAITING	0x02 /* waiting for transmission, ... */
 
 	char name[2];
 };
@@ -495,7 +496,7 @@ static int set_sockparam(struct iopar *iopar, double value)
 
 	if (par->remote) {
 		par->newvalue = value;
-		par->iopar.state |= ST_WAITING;
+		par->state |= ST_WAITING;
 	} else {
 		iopar_set_present(iopar);
 		par->iopar.value = value;
@@ -650,10 +651,10 @@ void netio_sync(void)
 			/* add remote waiting parameters */
 			len = 0;
 			for (par = remote->params; par; par = par->next) {
-				if (par->iopar.state & ST_WAITING) {
+				if (par->state & ST_WAITING) {
 					len += snprintf(pktbuf+len, NETIO_MTU-len, "%s>%lf\n",
 							par->name, par->newvalue);
-					par->iopar.state &= ~ST_WAITING;
+					par->state &= ~ST_WAITING;
 				}
 			}
 			/* test if we need to send */
