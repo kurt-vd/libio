@@ -617,7 +617,7 @@ void netio_sync(void)
 {
 	struct ioremote *remote;
 	struct sockparam *par;
-	int len, j, fail, success;
+	int len, j;
 
 	if (!netio_dirty)
 		return;
@@ -633,23 +633,17 @@ void netio_sync(void)
 					par->name, par->iopar.value);
 	}
 
-	fail = success = 0;
 	for (j = 0; j < NIOSOCKETS; ++j) {
 		if (!pubsockets[j])
 			continue;
 		for (remote = pubsockets[j]->remotes; remote; remote = remote->next) {
 			/* test if we need to send */
 			if (sendto(pubsockets[j]->fd, pktbuf, len, 0, &remote->name.sa, remote->namelen) < 0)
-				++fail;
-			else
-				++success;
+				error(0, errno, "sendto");
 		}
 	}
-	if (fail && !success)
-		error(1, errno, "sendto failed");
 
 	/* loop over remotes to send update to */
-	fail = success = 0;
 	for (j = 0; j < NIOSOCKETS; ++j) {
 		if (!iosockets[j])
 			continue;
@@ -667,12 +661,8 @@ void netio_sync(void)
 			if (!len)
 				continue;
 			if (sendto(iosockets[j]->fd, pktbuf, len, 0, &remote->name.sa, remote->namelen) < 0)
-				++fail;
-			else
-				++success;
+				error(0, errno, "sendto failed");
 		}
-		if (fail && !success)
-			error(1, errno, "sendto failed");
 	}
 	netio_dirty = 0;
 }
