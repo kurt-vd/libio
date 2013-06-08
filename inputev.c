@@ -27,8 +27,8 @@ struct evbtn {
 struct inputdev {
 	struct inputdev *next;
 	int fd;
-	int evdevnum;
 	struct evbtn *btns;
+	char file[2];
 };
 
 static struct inputdev *inputdevs;
@@ -116,8 +116,8 @@ static void read_inputdev(int fd, void *data)
 
 	ret = read(fd, &ev, sizeof(ev));
 	if (ret <= 0) {
-		error(0, ret ? errno : 0, "%s event%u%s",
-				__func__, dev->evdevnum, ret ? "" : ": EOF");
+		error(0, ret ? errno : 0, "%s %s",
+				__func__, dev->file, ret ? "" : ": EOF");
 		free_inputdev(dev);
 		return;
 	}
@@ -130,26 +130,41 @@ static void read_inputdev(int fd, void *data)
 	}
 }
 
-static struct inputdev *lookup_inputdev(int evdevnum)
+static struct inputdev *lookup_inputdev(const char *spec)
 {
 	struct inputdev *dev;
-	char *devfile;
+	char *file = NULL;
 
-	for (dev = inputdevs; dev; dev = dev->next) {
-		if (dev->evdevnum == evdevnum)
-			return dev;
+	/* find device file */
+	if (!strchr(spec, '/')) {
+		int num;
+		char *endp;
+
+		num = strtoul(spec, &endp, 10);
+		if (!*endp)
+			/* number did convert, or empty str */
+			asprintf(&file, "/dev/input/event%u", num);
+		else
+			asprintf(&file, "/dev/input/%s", spec);
+		spec = file;
 	}
 
-	dev = zalloc(sizeof(*dev));
-	dev->evdevnum = evdevnum;
+	for (dev = inputdevs; dev; dev = dev->next) {
+		if (!strcmp(dev->file, spec))
+			goto found;
+	}
 
-	asprintf(&devfile, "/dev/input/event%u", evdevnum);
-	dev->fd = open(devfile, O_RDONLY);
+	dev = zalloc(sizeof(*dev) + strlen(spec));
+	strcpy(dev->file, spec);
+
+	dev->fd = open(dev->file, O_RDONLY);
 	if (dev->fd < 0)
-		error(1, errno, "open %s", devfile);
-	free(devfile);
+		error(1, errno, "open %s", dev->file);
 	evt_add_fd(dev->fd, read_inputdev, dev);
 	add_inputdev(dev);
+found:
+	if (file)
+		free(file);
 	return dev;
 }
 
@@ -167,23 +182,19 @@ static void del_evbtn_hook(struct iopar *iopar)
 struct iopar *mkinputevbtn(const char *cstr)
 {
 	struct evbtn *btn;
+	struct inputdev *dev;
 	char *str;
-	int evdevnum;
+
+	str = strdup(cstr);
 
 	btn = zalloc(sizeof(*btn));
 	btn->iopar.del = del_evbtn_hook;
 	btn->iopar.set = NULL;
 	btn->iopar.value = 0;
 
-	evdevnum = strtoul(cstr, &str, 0);
-	if (*str)
-		++str;
-	btn->type = strtoul(str, &str, 0);
-	if (*str)
-		++str;
-	btn->code = strtoul(str, &str, 0);
-	if (*str)
-		++str;
+	dev = lookup_inputdev(strtok(str, ":;,") ?: "/dev/input/event0");
+	btn->type = strtoul(strtok(NULL, ":;,") ?: "1", NULL, 0);
+	btn->code = strtoul(strtok(NULL, ":;,") ?: "0", NULL, 0);
 	if (!btn->code)
 		error(0, 0, "'%s': no code or zero?", cstr);
 
@@ -192,9 +203,11 @@ struct iopar *mkinputevbtn(const char *cstr)
 	/* TODO: test for duplicate btns on this device */
 
 	/* register evbtn */
-	add_evbtn(btn, lookup_inputdev(evdevnum));
+	add_evbtn(btn, dev);
 	/* set as present */
 	iopar_set_present(&btn->iopar);
 	btn->iopar.state &= ~ST_DIRTY;
+
+	free(str);
 	return &btn->iopar;
 }
