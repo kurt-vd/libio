@@ -175,6 +175,24 @@ struct iopar *create_libiopar(const char *str)
 	return NULL;
 }
 
+int create_iopar_type(const char *type, const char *spec)
+{
+	int j;
+	struct iopar *iopar;
+
+	for (j = 0; iotypes[j].prefix; ++j) {
+		if (!strcmp(iotypes[j].prefix, type)) {
+			iopar = iotypes[j].create(spec);
+			if (!iopar)
+				break;
+			add_iopar(iopar);
+			return iopar->id;
+		}
+	}
+	error(0, 0, "%s %s %s failed", __func__, type, spec);
+	return -1;
+}
+
 int create_iopar(const char *str)
 {
 	struct iopar *iopar;

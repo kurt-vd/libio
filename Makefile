@@ -1,4 +1,4 @@
-default:	toggle iofollow ioprobe macbookd
+default:	toggle iofollow ioprobe ioserver macbookd
 
 LOCALVERSION	:= $(shell ./getlocalversion .)
 
@@ -23,6 +23,8 @@ toggle: libio.a
 iofollow: libio.a
 
 ioprobe: libio.a
+
+ioserver: libio.a
 
 macbookd: libio.a
 

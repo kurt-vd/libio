@@ -4,6 +4,7 @@ libio.a
 toggle
 iofollow
 ioprobe
+ioserver
 macbookd
 
 config.mk
