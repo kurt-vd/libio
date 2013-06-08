@@ -137,6 +137,10 @@ struct iopar *mkshared(const char *cstr)
 
 	spar = zalloc(sizeof(*spar));
 	spar->master = shared;
+	spar->iopar.del = del_shared;
+	spar->iopar.set = set_shared;
+	if (iopar_present(shared->refpar))
+		iopar_set_present(&spar->iopar);
 	++shared->refcnt;
 	/* register par in shared */
 	spar->next = shared->pars;
