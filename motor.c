@@ -106,10 +106,6 @@ static void motor_update_position(struct motor *mot)
 			(motor_curr_speed(mot) * (currtime - mot->lasttime)) /
 			mot->maxval;
 		iopar_set_dirty(&mot->pospar);
-		if (libio_trace >= 2)
-			printf("motor %.3lf: position %.3lf %.3lf\n", libevt_now(),
-					mot->pospar.value,
-					mot->pospar.value*mot->maxval);
 	}
 	mot->lasttime = currtime;
 }
@@ -140,8 +136,6 @@ static int change_motor_speed(struct motor *mot, double speed)
 		}
 	}
 	motor_update_position(mot);
-	if (libio_trace >= 2)
-		printf("motor %.3lf: speed %.3lf\n", libevt_now(), speed);
 	mot->dirpar.value = speed;
 	iopar_set_dirty(&mot->dirpar);
 	return 0;
