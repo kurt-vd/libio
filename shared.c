@@ -84,7 +84,7 @@ static void del_shared(struct iopar *iopar)
 	 * Don't contribute any longer
 	 * If I were the last contributor, master will revert refpar to default
 	 */
-	set_shared(iopar, FP_NAN);
+	set_shared(iopar, NAN);
 
 	/* remove myself from master */
 	for (ppar = &spar->master->pars; *ppar; ppar = &(*ppar)->next) {

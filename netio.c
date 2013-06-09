@@ -528,7 +528,7 @@ struct iopar *mknetiolocal(const char *name)
 	strcpy(par->name, name);
 	par->iopar.del = del_sockparam_hook;
 	par->iopar.set = set_sockparam;
-	par->iopar.value = FP_NAN;
+	par->iopar.value = NAN;
 	/* trigger initial transmission */
 	par->state |= ST_NEW;
 	netio_dirty = 1;

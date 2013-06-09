@@ -24,7 +24,7 @@ static int led_set(struct iopar *iopar, double value)
 	int ret;
 	FILE *fp;
 
-	/* FP_NAN may be passed to release control */
+	/* NAN may be passed to release control */
 	if (isnan(value))
 		value = 0;
 	fp = fopen(led->sysfs, "w");

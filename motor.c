@@ -114,9 +114,9 @@ static void motor_update_position(struct motor *mot)
 static int change_motor_speed(struct motor *mot, double speed)
 {
 	if (speed == 0) {
-		/* writing FP_NAN should not fail */
-		set_iopar(mot->out1, FP_NAN);
-		set_iopar(mot->out2, FP_NAN);
+		/* writing NAN should not fail */
+		set_iopar(mot->out1, NAN);
+		set_iopar(mot->out2, NAN);
 	} else if (speed > 0) {
 		if (set_iopar(mot->out2, 0) < 0)
 			goto fail_2;
@@ -140,12 +140,12 @@ static int change_motor_speed(struct motor *mot, double speed)
 	iopar_set_dirty(&mot->dirpar);
 	return 0;
 fail_21:
-	/* writing FP_NAN should not fail */
-	set_iopar(mot->out2, FP_NAN);
+	/* writing NAN should not fail */
+	set_iopar(mot->out2, NAN);
 fail_2:
 	return -1;
 fail_12:
-	set_iopar(mot->out1, FP_NAN);
+	set_iopar(mot->out1, NAN);
 fail_1:
 	return -1;
 }
