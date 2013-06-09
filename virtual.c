@@ -53,6 +53,13 @@ static int set_virtual(struct iopar *iopar, double value)
 	return 0;
 }
 
+static void get_virtual(struct iopar *iopar)
+{
+	struct virtualpar *virt = (struct virtualpar *)iopar;
+
+	virt->iopar.value = (state & virt->mask) ? 1 : 0;
+}
+
 static void del_virtual(struct iopar *iopar)
 {
 	struct virtualpar *virt = (struct virtualpar *)iopar;
@@ -73,6 +80,7 @@ struct iopar *mkvirtual(const char *str)
 
 	virt->iopar.del = del_virtual;
 	virt->iopar.set = set_virtual;
+	virt->iopar.jitget = get_virtual;
 	iopar_set_present(&virt->iopar);
 
 	return &virt->iopar;
