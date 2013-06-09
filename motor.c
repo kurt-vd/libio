@@ -345,27 +345,27 @@ struct iopar *mkmotordir(const char *cstr)
 		}
 		break;
 	case 1:
-		mot->maxval = strtod(tok, NULL);
-		break;
-	case 2:
 		mot->out1 = create_iopar(tok);
 		if (mot->out1 <= 0) {
 			error(0, 0, "%s: bad output '%s'", __func__, tok);
 			goto fail_config;
 		}
 		break;
-	case 3:
+	case 2:
 		mot->out2 = create_iopar(tok);
 		if (mot->out2 <= 0) {
 			error(0, 0, "%s: bad output '%s'", __func__, tok);
 			goto fail_config;
 		}
 		break;
+	case 3:
+		mot->maxval = strtod(tok, NULL);
+		break;
 	default:
 		break;
 	}
 	if (ntok < 4) {
-		error(0, 0, "%s: need arguments \"[MOTORTYPE(updown|godir)]+MAXVAL+OUT1+OUT2\"", __func__);
+		error(0, 0, "%s: need arguments \"[MOTORTYPE(updown|godir)]+OUT1+OUT2+MAXVAL\"", __func__);
 		goto fail_config;
 	}
 	free(sstr);
