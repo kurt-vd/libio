@@ -12,36 +12,44 @@ static int state;
 
 struct virtualpar {
 	struct iopar iopar;
-	int index;
+	/* mask of this parameters bit */
+	int mask;
+	/* mask of related bit, as for virtual teleruptor */
+	int mask2;
 };
+
+static void prn_virtual_state(int active_mask)
+{
+	int j, mask;
+	char *str, buf[sizeof(int)*10+1];
+
+	for (j = 0, mask = 1, str = buf; j < sizeof(int)*8; ++j, mask <<= 1) {
+		if (mask & 0x11111110)
+			/* seperator */
+			*str++ = ' ';
+
+		if (active_mask & mask)
+			*str++ = (state & mask) ? 'X' : '_';
+		else
+			*str++ = (state & mask) ? 'x' : '-';
+	}
+	*str++ = 0;
+	printf("virtual %.3lf: %s\n", libevt_now(), buf);
+}
 
 /* hooks */
 static int set_virtual(struct iopar *iopar, double value)
 {
 	struct virtualpar *virt = (struct virtualpar *)iopar;
-	char buf[sizeof(int)*10+1], *str;
-	int mask, j;
 
-	mask = 1 << virt->index;
 	/* test for 1, that is NAN-safe */
 	if (value > 0.5)
-		state |= mask;
+		state |= virt->mask;
 	else
-		state &= ~(mask);
+		state &= ~(virt->mask);
 
 	virt->iopar.value = value;
-
-	/* print state */
-	for (j = 0, str = buf; j < sizeof(int)*8; ++j) {
-		if (j == virt->index)
-			*str++ = (state & mask) ? 'X' : '_';
-		else
-			*str++ = (state & (1 << j)) ? 'x' : '-';
-		if ((j & 3) == 3)
-			*str++ = ' ';
-	}
-	*str++ = 0;
-	printf("virtual %.3lf: %s\n", libevt_now(), buf);
+	prn_virtual_state(virt->mask);
 	return 0;
 }
 
@@ -56,13 +64,16 @@ static void del_virtual(struct iopar *iopar)
 struct iopar *mkvirtual(const char *str)
 {
 	struct virtualpar *virt;
+	char *endp;
 
 	virt = zalloc(sizeof(*virt));
-	virt->index = strtoul(str, NULL, 0);
+	virt->mask = 1 << strtoul(str, &endp, 0);
+	if (*endp)
+		virt->mask2 = 1 << strtoul(endp+1, &endp, 0);
 
 	virt->iopar.del = del_virtual;
 	virt->iopar.set = set_virtual;
-	virt->iopar.value = state >> virt->index;
+	iopar_set_present(&virt->iopar);
 
 	return &virt->iopar;
 }
