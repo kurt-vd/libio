@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <error.h>
-#include <sys/timerfd.h>
 
 #include <libevt.h>
 
