@@ -259,6 +259,9 @@ static int set_motor_pos(struct iopar *iopar, double newvalue)
 
 	if (mot->ctrltype == CTRL_NONE)
 		mot->ctrltype = CTRL_POS;
+	else if ((mot->ctrltype == CTRL_DIR) && (motor_curr_speed(mot) == 0))
+		/* revert to position control */
+		mot->ctrltype = CTRL_POS;
 	mot->setpoint = newvalue;
 	call_motor_handler(mot);
 	return 0;
