@@ -1,7 +1,7 @@
 *.o
 
 libio.a
-toggle
+iotoggle
 iofollow
 ioprobe
 ioserver
