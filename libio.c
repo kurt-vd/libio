@@ -106,6 +106,7 @@ static const struct {
 	{ "pmotor", mkmotorpos, },
 
 	{ "teleruptor", mkteleruptor, },
+	{ "vteleruptor", mkvirtualteleruptor, },
 
 	{ "netio", mknetiolocal, },
 	{ "unix", mknetiounix, },

@@ -85,3 +85,35 @@ struct iopar *mkvirtual(const char *str)
 
 	return &virt->iopar;
 }
+
+/* teleruptor simulator */
+static void on_teleruptor(void *dat)
+{
+	struct virtualpar *virt = dat;
+
+	state ^= virt->mask2;
+	prn_virtual_state(virt->mask2);
+}
+
+static int set_virtual_teleruptor(struct iopar *iopar, double value)
+{
+	struct virtualpar *virt = (struct virtualpar *)iopar;
+	int saved_state, ret;
+
+	saved_state = state;
+	ret = set_virtual(iopar, value);
+
+	if ((saved_state ^ state) & state & virt->mask)
+		evt_add_timeout(0.05, on_teleruptor, virt);
+	return ret;
+}
+
+struct iopar *mkvirtualteleruptor(const char *str)
+{
+	struct iopar *iopar;
+
+	iopar = mkvirtual(str);
+	if (iopar)
+		iopar->set = set_virtual_teleruptor;
+	return iopar;
+}

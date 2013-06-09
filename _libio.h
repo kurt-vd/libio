@@ -59,6 +59,7 @@ extern struct iopar *mkapplelight(const char *sysfs);
 extern struct iopar *mkmotordir(const char *cstr);
 extern struct iopar *mkmotorpos(const char *cstr);
 extern struct iopar *mkteleruptor(const char *cstr);
+extern struct iopar *mkvirtualteleruptor(const char *str);
 
 extern struct iopar *mknetiolocal(const char *name);
 extern struct iopar *mknetiounix(const char *uri);
