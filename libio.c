@@ -241,6 +241,8 @@ double get_iopar(int iopar_id, double default_value)
 		errno = ENODEV;
 		return default_value;
 	}
+	if (iopar->jitget)
+		iopar->jitget(iopar);
 	return iopar->value;
 }
 

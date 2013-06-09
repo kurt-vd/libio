@@ -13,6 +13,8 @@ struct iopar {
 	double value;
 	void (*del)(struct iopar *);
 	int (*set)(struct iopar *, double value);
+	/* method to refresh value just before get */
+	void (*jitget)(struct iopar *);
 };
 
 static inline void iopar_set_dirty(struct iopar *iopar)
