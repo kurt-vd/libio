@@ -188,8 +188,11 @@ static int set_motor_dir(struct iopar *iopar, double newvalue)
 
 	/* test for end-of-course positions */
 	if (((newvalue > 0) && (motor_curr_position(mot) >= 1)) ||
-			((newvalue < 0) && (motor_curr_position(mot) <= 0)))
+			((newvalue < 0) && (motor_curr_position(mot) <= 0))) {
+		/* trigger update with old value */
+		iopar_set_dirty(&mot->dirpar);
 		return -1;
+	}
 	mot->reqspeed = newvalue;
 	if (mot->state != ST_WAIT)
 		motor_handler(mot);
