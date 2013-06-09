@@ -82,10 +82,12 @@ int main(int argc, char *argv[])
 	/* main ... */
 	while (1) {
 		for (lnk = s.links; lnk; lnk = lnk->next) {
-			if (iopar_dirty(lnk->a))
+			if (iopar_dirty(lnk->a)) {
 				set_iopar(lnk->b, get_iopar(lnk->a, 0));
 				/* TODO: warn if failed */
-			else if (iopar_dirty(lnk->b))
+				/* write back in case the real value didn't change */
+				set_iopar(lnk->a, get_iopar(lnk->b, 0));
+			} else if (iopar_dirty(lnk->b))
 				set_iopar(lnk->a, get_iopar(lnk->b, 0));
 		}
 
