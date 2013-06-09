@@ -43,7 +43,7 @@ struct motor {
 		#define ST_IDLE		0
 		#define ST_BUSY		1
 		#define ST_WAIT		2 /* implement cooldown period */
-	#define COOLDOWN_TIME	0.2
+	#define COOLDOWN_TIME	1
 	int ctrltype;
 		#define CTRL_NONE	0
 		#define CTRL_POS	1 /* control position */
