@@ -23,10 +23,11 @@ static int set_virtual(struct iopar *iopar, double value)
 	int mask, j;
 
 	mask = 1 << virt->index;
-	if (value < 0.5)
-		state &= ~(mask);
-	else
+	/* test for 1, that is NAN-safe */
+	if (value > 0.5)
 		state |= mask;
+	else
+		state &= ~(mask);
 
 	virt->iopar.value = value;
 
