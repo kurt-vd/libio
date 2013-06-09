@@ -115,34 +115,38 @@ static int change_motor_speed(struct motor *mot, double speed)
 {
 	if (speed == 0) {
 		/* writing FP_NAN should not fail */
-		set_iopar(mot->out2, FP_NAN);
 		set_iopar(mot->out1, FP_NAN);
+		set_iopar(mot->out2, FP_NAN);
 	} else if (speed > 0) {
 		if (set_iopar(mot->out2, 0) < 0)
-			goto failed;
+			goto fail_2;
 		if (set_iopar(mot->out1, speed) < 0)
-			goto failed;
+			goto fail_21;
 	} else if (speed < 0) {
 		if (mot->type == TYPE_GODIR) {
 			if (set_iopar(mot->out2, 1) < 0)
-				goto failed;
+				goto fail_2;
 			if (set_iopar(mot->out1, -speed) < 0)
-				goto failed;
+				goto fail_21;
 		} else {
 			if (set_iopar(mot->out1, 0) < 0)
-				goto failed;
+				goto fail_1;
 			if (set_iopar(mot->out2, -speed) < 0)
-				goto failed;
+				goto fail_12;
 		}
 	}
 	motor_update_position(mot);
 	mot->dirpar.value = speed;
 	iopar_set_dirty(&mot->dirpar);
 	return 0;
-failed:
+fail_21:
 	/* writing FP_NAN should not fail */
 	set_iopar(mot->out2, FP_NAN);
+fail_2:
+	return -1;
+fail_12:
 	set_iopar(mot->out1, FP_NAN);
+fail_1:
 	return -1;
 }
 
