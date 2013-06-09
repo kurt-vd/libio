@@ -116,7 +116,7 @@ static void read_inputdev(int fd, void *data)
 
 	ret = read(fd, &ev, sizeof(ev));
 	if (ret <= 0) {
-		error(0, ret ? errno : 0, "%s %s",
+		error(0, ret ? errno : 0, "%s %s%s",
 				__func__, dev->file, ret ? "" : ": EOF");
 		free_inputdev(dev);
 		return;
