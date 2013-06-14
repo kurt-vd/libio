@@ -1,4 +1,5 @@
-default:	iotoggle iofollow ioprobe ioserver macbookd
+PROGS	= iotoggle iofollow ioprobe ioserver macbookd
+default: $(PROGS)
 
 LOCALVERSION	:= $(shell ./getlocalversion .)
 
@@ -6,6 +7,7 @@ PREFIX	= /usr/local
 CFLAGS	= -Wall -g3 -O0
 CPPFLAGS= -D_GNU_SOURCE
 LDLIBS	= -levt -lllist -lm -lrt
+STRIP	= strip
 
 -include config.mk
 CPPFLAGS += -DLOCALVERSION=\"$(LOCALVERSION)\"
@@ -30,4 +32,7 @@ ioserver: libio.a
 macbookd: libio.a
 
 clean:
-	rm -f libio.a toggle iofollow ioprobe $(wildcard *.o)
+	rm -f libio.a $(PROGS) $(wildcard *.o)
+
+install: $(PROGS)
+	install --strip-program=$(STRIP) -v -s $^ $(DESTDIR)$(PREFIX)/bin
