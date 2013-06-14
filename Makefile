@@ -12,24 +12,19 @@ STRIP	= strip
 -include config.mk
 CPPFLAGS += -DLOCALVERSION=\"$(LOCALVERSION)\"
 
-%: %.c
-	$(CC) -o $@ -DNAME=\"$@\" $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
+%.o: %.c
+	@echo " CC $<"
+	@$(CC) -c -o $@ $(CPPFLAGS) $(CFLAGS) $<
+%: %.c libio.a
+	@echo " CC $@"
+	@$(CC) -o $@ -DNAME=\"$@\" $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
 
 libio.a: libio.o led.o inputev.o netio.o virtual.o shared.o \
 	applelight.o preset.o \
 	motor.o \
 	teleruptor.o
-	ar crs $@ $^
-
-iotoggle: libio.a
-
-iofollow: libio.a
-
-ioprobe: libio.a
-
-ioserver: libio.a
-
-macbookd: libio.a
+	@echo " AR $@"
+	@ar crs $@ $^
 
 clean:
 	rm -f libio.a $(PROGS) $(wildcard *.o)
