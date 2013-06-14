@@ -6,6 +6,7 @@ iofollow
 ioprobe
 ioserver
 macbookd
+hamotor
 
 config.mk
 tags

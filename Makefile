@@ -1,4 +1,5 @@
 PROGS	= iotoggle iofollow ioprobe ioserver macbookd
+PROGS	+= hamotor
 default: $(PROGS)
 
 LOCALVERSION	:= $(shell ./getlocalversion .)
@@ -27,7 +28,7 @@ libio.a: libio.o led.o inputev.o netio.o virtual.o shared.o \
 	@ar crs $@ $^
 
 clean:
-	rm -f libio.a $(PROGS) $(wildcard *.o)
+	rm -f libio.a $(PROGS) $(wildcard *.o libllist/*.o libevt/*.o)
 
 install: $(PROGS)
 	install --strip-program=$(STRIP) -v -s $^ $(DESTDIR)$(PREFIX)/bin
