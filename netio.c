@@ -437,6 +437,7 @@ int libio_bind_net(const char *uri)
 {
 	struct iosocket *iosock;
 	int ret, family, sk, namelen, saved_umask;
+	char *namestr;
 	union sockaddrs name;
 
 	/* find name */
@@ -452,7 +453,13 @@ int libio_bind_net(const char *uri)
 	else
 		family = 0;
 
-	namelen = ret = str_to_sockname(strchr(uri, ':')+1, &name.sa, family);
+	namestr = strchr(uri, ':');
+	if (!namestr) {
+		error(0, 0, "no family in %s", uri);
+		return -1;
+	}
+
+	namelen = ret = str_to_sockname(namestr+1, &name.sa, family);
 	if (ret < 0)
 		goto fail_sockname;
 
