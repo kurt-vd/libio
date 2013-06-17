@@ -150,6 +150,8 @@ int main(int argc, char *argv[])
 		lnk->pmot = create_iopar("pmotor:");
 		lnk->next = s.links;
 		s.links = lnk;
+		/* preset lastdir to a nonzero default */
+		lnk->lastdir = -1;
 	}
 
 	short_press_event = 0;
