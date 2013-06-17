@@ -60,7 +60,8 @@ int main(int argc, char *argv[])
 		++s.verbose;
 		break;
 	case 'l':
-		libio_bind_net(optarg);
+		if (libio_bind_net(optarg) < 0)
+			error(1, 0, "bind %s failed", optarg);
 		break;
 
 	case '?':

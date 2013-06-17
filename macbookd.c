@@ -98,7 +98,8 @@ int main(int argc, char *argv[])
 		break;
 
 	case 'l':
-		libio_bind_net(optarg);
+		if (libio_bind_net(optarg) < 0)
+			error(1, 0, "bind %s failed", optarg);
 		++nsocks;
 		break;
 	case '?':
@@ -107,8 +108,11 @@ int main(int argc, char *argv[])
 		exit(1);
 		break;
 	}
-	if (!nsocks)
-		libio_bind_net("unix:@macbookd");
+	if (!nsocks) {
+		const char uri[] = "unix:@macbookd";
+		if (libio_bind_net(uri) < 0)
+			error(1, 0, "bind %s failed", uri);
+	}
 	libio_set_trace(s.verbose);
 
 	light = create_iopar(s.light);
