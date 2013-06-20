@@ -7,6 +7,7 @@ ioprobe
 ioserver
 macbookd
 hamotor
+suntellposition
 
 config.mk
 tags

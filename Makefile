@@ -1,5 +1,6 @@
 PROGS	= iotoggle iofollow ioprobe ioserver macbookd
 PROGS	+= hamotor
+PROGS	+= suntellposition
 default: $(PROGS)
 
 LOCALVERSION	:= $(shell ./getlocalversion .)
@@ -26,6 +27,13 @@ libio.a: libio.o led.o inputev.o netio.o virtual.o shared.o \
 	teleruptor.o
 	@echo " AR $@"
 	@ar crs $@ $^
+
+# specific programs without libio
+suntellposition: LDLIBS	= -lm
+suntellposition: suntellposition.c sunposition.o
+	@echo " CC $@"
+	@$(CC) -o $@ -DNAME=\"$@\" $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
+
 
 clean:
 	rm -f libio.a $(PROGS) $(wildcard *.o libllist/*.o libevt/*.o)
