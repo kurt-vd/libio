@@ -118,12 +118,18 @@ int main(int argc, char *argv[])
 	}
 
 	if (optind+2 > argc) {
+#if defined(DEFAULT_LAT) && defined(DEFAULT_LON)
+		lat = DEFAULT_LAT;
+		lon = DEFAULT_LON;
+#else
 		fputs(help_msg, stderr);
 		exit(1);
+#endif
+	} else {
+		lat = strtod(argv[optind], 0);
+		lon = strtod(argv[optind+1], 0);
 	}
 
-	lat = strtod(argv[optind], 0);
-	lon = strtod(argv[optind+1], 0);
 	if (optind+3 <= argc)
 		t = strtolocaltime(argv[optind+2], NULL);
 	printf("time %s", ctime(&t));

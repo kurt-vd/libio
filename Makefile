@@ -29,6 +29,12 @@ libio.a: libio.o led.o inputev.o netio.o virtual.o shared.o \
 	@ar crs $@ $^
 
 # specific programs without libio
+ifdef GPSLON
+suntellposition: CPPFLAGS += -DDEFAULT_LON=$(GPSLON)
+endif
+ifdef GPSLAT
+suntellposition: CPPFLAGS += -DDEFAULT_LAT=$(GPSLAT)
+endif
 suntellposition: LDLIBS	= -lm
 suntellposition: suntellposition.c sunposition.o
 	@echo " CC $@"
