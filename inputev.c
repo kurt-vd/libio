@@ -15,10 +15,17 @@
 
 struct inputdev;
 
+static const char *const strflags[] = {
+	"debounce",
+		#define FL_DEBOUNCE	0x01
+	NULL,
+};
+
 struct evbtn {
 	struct iopar iopar;
 	struct inputdev *dev;
 	struct evbtn *next;
+	int flags;
 
 	int type;
 	int code;
@@ -181,7 +188,8 @@ struct iopar *mkinputevbtn(const char *cstr)
 {
 	struct evbtn *btn;
 	struct inputdev *dev;
-	char *str;
+	char *str, *tok;
+	int flag;
 
 	str = strdup(cstr);
 
@@ -195,6 +203,14 @@ struct iopar *mkinputevbtn(const char *cstr)
 	btn->code = strtoul(strtok(NULL, ":;,") ?: "0", NULL, 0);
 	if (!btn->code)
 		error(0, 0, "'%s': no code or zero?", cstr);
+	while (1) {
+		tok = strtok(NULL, ":;,");
+		if (!tok)
+			break;
+		flag = strlookup(tok, strflags);
+		if (flag >= 0)
+			btn->flags |= 1 << flag;
+	}
 
 	/* TODO: test input device for type:code presence */
 
