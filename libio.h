@@ -10,6 +10,13 @@ extern "C" {
 /* malloc & zero */
 extern void *zalloc(unsigned int size);
 
+/*
+ * string table lookups,
+ * returns the unique index of @str in @table,
+ * or -1 when @str is not unique, or not found.
+ */
+extern int strlookup(const char *str, const char *const table[]);
+
 /* sysfs (or any other file) iface */
 extern int attr_read(int default_value, const char *fmt, ...)
 	__attribute__((format(printf,2,3)));

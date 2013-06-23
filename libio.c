@@ -20,6 +20,26 @@ void *zalloc(unsigned int size)
 	return ptr;
 }
 
+int strlookup(const char *str, const char *const table[])
+{
+	int j, result = -1, len = strlen(str ?: "");
+
+	if (!len)
+		return -1;
+
+	for (j = 0; *table; ++j, ++table) {
+		if (!strncasecmp(str, *table, len)) {
+			if (result >= 0) {
+				error(0, 0, "%s %s: not unique",
+						__func__, str);
+				return -1;
+			}
+			result = j;
+		}
+	}
+	return result;
+}
+
 /* */
 int attr_read(int default_value, const char *fmt, ...)
 {
