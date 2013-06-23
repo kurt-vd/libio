@@ -97,6 +97,8 @@ int main(int argc, char *argv[])
 
 		libio_flush();
 		if (evt_loop(-1) < 0) {
+			if (errno == EINTR)
+				continue;
 			error(0, errno, "evt_loop");
 			break;
 		}
