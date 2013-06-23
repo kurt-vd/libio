@@ -171,9 +171,10 @@ static struct inputdev *lookup_inputdev(const char *spec)
 	dev = zalloc(sizeof(*dev) + strlen(spec));
 	strcpy(dev->file, spec);
 
-	dev->fd = open(dev->file, O_RDONLY);
+	dev->fd = open(dev->file, O_RDONLY /*| O_CLOEXEC*/);
 	if (dev->fd < 0)
 		error(1, errno, "open %s", dev->file);
+	fcntl(dev->fd, F_SETFD, fcntl(dev->fd, F_GETFD) | FD_CLOEXEC);
 	evt_add_fd(dev->fd, read_inputdev, dev);
 	add_inputdev(dev);
 found:

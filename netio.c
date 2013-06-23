@@ -407,11 +407,12 @@ static int netio_autobind(int family)
 	if (iosockets[family])
 		return 0;
 
-	ret = sk = socket(family, SOCK_DGRAM, 0);
+	ret = sk = socket(family, SOCK_DGRAM/* | SOCK_CLOEXEC*/, 0);
 	if (ret < 0) {
 		error(0, errno, "socket %i dgram 0", name.sa.sa_family);
 		return -1;
 	}
+	fcntl(sk, F_SETFD, fcntl(sk, F_GETFD) | FD_CLOEXEC);
 
 	namelen = str_to_sockname(NULL, &name.sa, family);
 	if (namelen > 0) {
@@ -468,11 +469,12 @@ int libio_bind_net(const char *uri)
 		error(1, 0, "duplicate family socket '%s'", uri);
 
 	/* socket creation */
-	ret = sk = socket(name.sa.sa_family, SOCK_DGRAM, 0);
+	ret = sk = socket(name.sa.sa_family, SOCK_DGRAM/* | SOCK_CLOEXEC*/, 0);
 	if (ret < 0) {
 		error(0, errno, "socket %i dgram 0", name.sa.sa_family);
 		goto fail_socket;
 	}
+	fcntl(sk, F_SETFD, fcntl(sk, F_GETFD) | FD_CLOEXEC);
 
 	saved_umask = umask(0);
 	ret = bind(sk, &name.sa, namelen);
