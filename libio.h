@@ -33,12 +33,6 @@ extern int iopar_dirty(int iopar);
 /* return true when iopar is lost */
 extern int iopar_present(int iopar);
 
-/*
- * Only signal (aka. dirty) 'on' state
- * This will affect only some types of iopar's!
- */
-extern int iopar_set_pushbtn(int iopar);
-
 /* netio: publish local parameter via this socket */
 extern int libio_bind_net(const char *uri);
 

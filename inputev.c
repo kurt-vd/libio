@@ -95,13 +95,9 @@ static void free_inputdev(struct inputdev *dev)
 
 static void evbtn_newdata(struct evbtn *btn, const struct input_event *ev)
 {
-	if (btn->iopar.state & ST_PUSHBTN) {
-		/* pushbtn signalling */
-		if (!(int)btn->iopar.value && ev->value)
-			iopar_set_dirty(&btn->iopar);
-	} else /*if ((int)btn->iopar.value != ev->value) */
-		/* regular signalling */
+	if ((int)btn->iopar.value != ev->value)
 		iopar_set_dirty(&btn->iopar);
+
 	/* always set the correct value, regardless of signalling */
 	btn->iopar.value = ev->value;
 	/* iopar_set_present(&btn->iopar); */

@@ -79,12 +79,6 @@ int main(int argc, char *argv[])
 	downdev = (optind + 2 == argc) ? create_iopar(argv[optind++]) : 0;
 	outdev = create_iopar(argv[optind++]);
 
-	if (downdev > 0) {
-		/* 2 pushbtns */
-		iopar_set_pushbtn(updev);
-		iopar_set_pushbtn(downdev);
-	}
-
 	/* main ... */
 	while (1) {
 		if (iopar_dirty(updev) && (get_iopar(updev, 0) > 0)) {

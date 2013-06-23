@@ -291,19 +291,6 @@ int iopar_present(int iopar_id)
 	return (iopar->state & ST_PRESENT) ? 1 : 0;
 }
 
-int iopar_set_pushbtn(int iopar_id)
-{
-	struct iopar *iopar = _lookup_iopar(iopar_id);
-
-	if (!iopar) {
-		errno = ENODEV;
-		return -1;
-	} else {
-		iopar->state |= ST_PUSHBTN;
-		return 0;
-	}
-}
-
 void libio_flush(void)
 {
 	int j;

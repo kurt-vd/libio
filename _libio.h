@@ -9,7 +9,6 @@ struct iopar {
 	int state;
 #define ST_DIRTY	0x01
 #define ST_PRESENT	0x08 /* parameter has real data */
-#define ST_PUSHBTN	0x10 /* for input device: only signal 'on' state */
 	double value;
 	void (*del)(struct iopar *);
 	int (*set)(struct iopar *, double value);
