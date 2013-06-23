@@ -1,5 +1,5 @@
 PROGS	= iotoggle iofollow ioprobe ioserver macbookd
-PROGS	+= hamotor haspawn
+PROGS	+= hamotor haspawn hadirect
 PROGS	+= suntellposition
 default: $(PROGS)
 

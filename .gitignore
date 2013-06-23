@@ -8,6 +8,7 @@ ioserver
 macbookd
 hamotor
 haspawn
+hadirect
 suntellposition
 
 config.mk
