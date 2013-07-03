@@ -151,7 +151,7 @@ static int str_to_sockname(const char *uri, struct sockaddr *paddr, int family)
 			strncpy(uaddr->sun_path, luri, sizeof(uaddr->sun_path));
 		else
 			sprintf(uaddr->sun_path, "@netio-%i", getpid());
-		len = SUN_LEN(uaddr);
+		len = sizeof(*uaddr);
 		if ('@' == uaddr->sun_path[0])
 			/* abstract namespace */
 			uaddr->sun_path[0] = 0;
