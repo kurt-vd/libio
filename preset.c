@@ -26,7 +26,7 @@ static struct {
 static void load_presets_file(const char *file)
 {
 	FILE *fp;
-	int ret;
+	int ret, linenr = 0;
 	char *line = NULL, *key, *value;
 	size_t linesize = 0;
 	struct lookup *ptr;
@@ -45,12 +45,15 @@ static void load_presets_file(const char *file)
 		/* strip trailing newline */
 		if (line[ret-1] == '\n')
 			line[--ret] = 0;
+		/* count lines */
+		++linenr;
 		/* test for comments or empty lines */
 		if (strchr("#\n", *line))
 			continue;
 		key = strtok(line, "\t ");
 		value = strtok(NULL, "\t ");
 		if (!key || !value) {
+			error(0, 0, "bad line %s:%i", file, linenr);
 			continue;
 		}
 		if (!strcmp(key, "include")) {
