@@ -48,8 +48,11 @@ static void load_presets_file(const char *file)
 		/* test for comments or empty lines */
 		if (strchr("#\n", *line))
 			continue;
-		key = strtok(line, "\t");
-		value = strtok(NULL, "\t");
+		key = strtok(line, "\t ");
+		value = strtok(NULL, "\t ");
+		if (!key || !value) {
+			continue;
+		}
 		if (!strcmp(key, "include")) {
 			load_presets_file(value);
 			continue;
