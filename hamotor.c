@@ -9,6 +9,8 @@
 #include <libevt.h>
 #include "_libio.h"
 
+#define MAX_IN 3
+
 /* ARGUMENTS */
 static const char help_msg[] =
 	NAME ": Control 2+ motors with similar function\n"
@@ -18,6 +20,7 @@ static const char help_msg[] =
 	" -V, --version		Show version\n"
 	" -v, --verbose		Be more verbose\n"
 	" -l, --listen=SPEC	Listen on SPEC\n"
+	" -i, --in=SPEC		Use SPEC as input\n"
 	;
 
 #ifdef _GNU_SOURCE
@@ -26,6 +29,7 @@ static const struct option long_opts[] = {
 	{ "version", no_argument, NULL, 'V', },
 	{ "verbose", no_argument, NULL, 'v', },
 	{ "listen", required_argument, NULL, 'l', },
+	{ "in", required_argument, NULL, 'i', },
 	{ },
 };
 
@@ -34,7 +38,7 @@ static const struct option long_opts[] = {
 	getopt((argc), (argv), (optstring))
 #endif
 
-static const char optstring[] = "?Vvl:";
+static const char optstring[] = "?Vvl:i:";
 
 struct link {
 	struct link *next;
@@ -50,7 +54,9 @@ static struct args {
 	int verbose;
 	struct link *links;
 	struct link *current;
-	int in; /* common input */
+	int in[MAX_IN]; /* common input(s) */
+	int nin;
+	char *instr[MAX_IN];
 } s;
 
 /*
@@ -105,7 +111,7 @@ static const char *posname(const char *str)
 
 static int hamotor(int argc, char *argv[])
 {
-	int opt, short_press_event;
+	int opt, short_press_event, j;
 	char *name;
 	struct link *lnk;
 	double value;
@@ -122,6 +128,11 @@ static int hamotor(int argc, char *argv[])
 		if (libio_bind_net(optarg) < 0)
 			error(1, 0, "bind %s failed", optarg);
 		break;
+	case 'i':
+		if (s.nin >= MAX_IN)
+			error(1, 0, "maximum %u inputs", MAX_IN);
+		s.instr[s.nin++] = optarg;
+		break;
 
 	case '?':
 	default:
@@ -137,9 +148,11 @@ static int hamotor(int argc, char *argv[])
 	}
 
 	/* create common input */
-	s.in = create_iopar(argv[optind++]);
-	if (s.in < 0)
-		error(1, 0, "failed to create %s", argv[optind-1]);
+	for (j = 0; j < s.nin; ++j) {
+		s.in[j] = create_iopar(s.instr[j]);
+		if (s.in[j] < 0)
+			error(1, 0, "failed to create %s", s.instr[j]);
+	}
 
 	for (; optind < argc; ++optind) {
 		lnk = zalloc(sizeof(*lnk));
@@ -158,12 +171,18 @@ static int hamotor(int argc, char *argv[])
 	/* main ... */
 	while (1) {
 		/* determine local input */
-		if (iopar_dirty(s.in) && (get_iopar(s.in, 0) > 0.5)) {
-			evt_add_timeout(1, btn_down_timer, NULL);
-		} else if (iopar_dirty(s.in) && (get_iopar(s.in, 1) < 0.5)) {
-			evt_remove_timeout(btn_down_timer, NULL);
-			short_press_event = !long_press_pending;
-			long_press_pending = 0;
+		for (j = 0; j < s.nin; ++j) {
+			if (!iopar_dirty(s.in[j])) {
+				/* nothing */
+			} else if (get_iopar(s.in[j], 0) > 0.5) {
+				evt_add_timeout(1, btn_down_timer, NULL);
+				break;
+			} else if (get_iopar(s.in[j], 1) < 0.5) {
+				evt_remove_timeout(btn_down_timer, NULL);
+				short_press_event = !long_press_pending;
+				long_press_pending = 0;
+				break;
+			}
 		}
 
 		for (lnk = s.links; lnk; lnk = lnk->next) {
