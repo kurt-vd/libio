@@ -8,6 +8,7 @@
 #include <error.h>
 #include <getopt.h>
 
+#include "libio.h"
 #include "sun.h"
 
 /* ARGUMENTS */
@@ -96,7 +97,7 @@ static time_t strtolocaltime(const char *str, char **endp)
 	return mktime(&tm);
 }
 
-int main(int argc, char *argv[])
+int suntellposition(int argc, char *argv[])
 {
 	int opt, ret;
 	time_t t = time(0);
@@ -140,4 +141,10 @@ int main(int argc, char *argv[])
 
 	printf("incl\t%.3lf\nazimuth\t%.3lf\n", incl, azim);
 	return 0;
+}
+
+__attribute__((constructor))
+static void init(void)
+{
+	register_applet(NAME, suntellposition);
 }

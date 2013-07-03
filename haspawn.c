@@ -74,7 +74,7 @@ static void starttorun(void *dat)
 		error(1, errno, "fork");
 }
 
-int main(int argc, char *argv[])
+static int haspawn(int argc, char *argv[])
 {
 	int opt, param;
 
@@ -125,4 +125,10 @@ int main(int argc, char *argv[])
 		}
 	}
 	return 0;
+}
+
+__attribute__((constructor))
+static void init(void)
+{
+	register_applet(NAME, haspawn);
 }

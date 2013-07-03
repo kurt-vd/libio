@@ -50,7 +50,7 @@ static struct args {
 	int dryrun;
 } s;
 
-int main(int argc, char *argv[])
+static int iofollow(int argc, char *argv[])
 {
 	int opt;
 	/* parameter indices */
@@ -120,4 +120,10 @@ int main(int argc, char *argv[])
 		}
 	}
 	return 0;
+}
+
+__attribute__((constructor))
+static void init(void)
+{
+	register_applet(NAME, iofollow);
 }

@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 /* GENERIC */
+extern void register_applet(const char *name, int (*fn)(int, char *[]));
 
 /* malloc & zero */
 extern void *zalloc(unsigned int size);

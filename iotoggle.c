@@ -45,7 +45,7 @@ static struct args {
 	.step = 0.125,
 };
 
-int main(int argc, char *argv[])
+static int iotoggle(int argc, char *argv[])
 {
 	int opt;
 	int outdev, updev, downdev;
@@ -104,4 +104,10 @@ int main(int argc, char *argv[])
 		}
 	}
 	return 0;
+}
+
+__attribute__((constructor))
+static void init(void)
+{
+	register_applet(NAME, iotoggle);
 }

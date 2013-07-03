@@ -69,7 +69,7 @@ static double fit_float(double value, double min, double max)
 		return value;
 }
 
-int main(int argc, char *argv[])
+static int macbookd(int argc, char *argv[])
 {
 	int opt, nsocks = 0, changed;
 	/* parameter indices */
@@ -173,4 +173,10 @@ int main(int argc, char *argv[])
 		}
 	}
 	return 0;
+}
+
+__attribute__((constructor))
+static void init_macbookd(void)
+{
+	register_applet(NAME, macbookd);
 }

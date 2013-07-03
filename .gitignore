@@ -1,15 +1,7 @@
 *.o
 
 libio.a
-iotoggle
-iofollow
-ioprobe
-ioserver
-macbookd
-hamotor
-haspawn
-hadirect
-suntellposition
+io
 
 config.mk
 tags

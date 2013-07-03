@@ -1,6 +1,4 @@
-PROGS	= iotoggle iofollow ioprobe ioserver macbookd
-PROGS	+= hamotor haspawn hadirect
-PROGS	+= suntellposition
+PROGS	= io
 default: $(PROGS)
 
 LOCALVERSION	:= $(shell ./getlocalversion .)
@@ -8,6 +6,7 @@ LOCALVERSION	:= $(shell ./getlocalversion .)
 PREFIX	= /usr/local
 CFLAGS	= -Wall -g3 -O0
 CPPFLAGS= -D_GNU_SOURCE
+LDFLAGS =
 LDLIBS	= -levt -lllist -lm -lrt
 STRIP	= strip
 
@@ -16,10 +15,7 @@ CPPFLAGS += -DLOCALVERSION=\"$(LOCALVERSION)\"
 
 %.o: %.c
 	@echo " CC $<"
-	@$(CC) -c -o $@ $(CPPFLAGS) $(CFLAGS) $<
-%: %.c libio.a
-	@echo " CC $@"
-	@$(CC) -o $@ -DNAME=\"$@\" $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
+	@$(CC) -c -o $@ -DNAME=\"$*\" $(CPPFLAGS) $(CFLAGS) $<
 
 libio.a: libio.o led.o inputev.o netio.o virtual.o shared.o \
 	applelight.o preset.o \
@@ -28,18 +24,21 @@ libio.a: libio.o led.o inputev.o netio.o virtual.o shared.o \
 	@echo " AR $@"
 	@ar crs $@ $^
 
+io: io.o iofollow.o ioserver.o ioprobe.o iotoggle.o \
+	hadirect.o hamotor.o haspawn.o \
+	suntellposition.o sunposition.o \
+	macbookd.o \
+	libio.a
+	@echo " CC $@"
+	@$(CC) -o $@ -DNAME=\"$@\" $(LDFLAGS) $^ $(LDLIBS)
+
 # specific programs without libio
 ifdef GPSLON
-suntellposition: CPPFLAGS += -DDEFAULT_LON=$(GPSLON)
+suntellposition.o: CPPFLAGS += -DDEFAULT_LON=$(GPSLON)
 endif
 ifdef GPSLAT
-suntellposition: CPPFLAGS += -DDEFAULT_LAT=$(GPSLAT)
+suntellposition.o: CPPFLAGS += -DDEFAULT_LAT=$(GPSLAT)
 endif
-suntellposition: LDLIBS	= -lm
-suntellposition: suntellposition.c sunposition.o
-	@echo " CC $@"
-	@$(CC) -o $@ -DNAME=\"$@\" $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
-
 
 clean:
 	rm -f libio.a $(PROGS) $(wildcard *.o libllist/*.o libevt/*.o)

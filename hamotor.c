@@ -103,7 +103,7 @@ static const char *posname(const char *str)
 	return buf;
 }
 
-int main(int argc, char *argv[])
+static int hamotor(int argc, char *argv[])
 {
 	int opt, short_press_event;
 	char *name;
@@ -226,4 +226,10 @@ int main(int argc, char *argv[])
 		}
 	}
 	return 0;
+}
+
+__attribute__((constructor))
+static void init(void)
+{
+	register_applet(NAME, hamotor);
 }

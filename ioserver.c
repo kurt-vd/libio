@@ -46,7 +46,7 @@ static struct args {
 	struct link *links;
 } s;
 
-int main(int argc, char *argv[])
+static int ioserver(int argc, char *argv[])
 {
 	int opt, j;
 	struct link *lnk;
@@ -101,4 +101,10 @@ int main(int argc, char *argv[])
 		}
 	}
 	return 0;
+}
+
+__attribute__((constructor))
+static void init(void)
+{
+	register_applet(NAME, ioserver);
 }
