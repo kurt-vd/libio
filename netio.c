@@ -158,7 +158,7 @@ static int str_to_sockname(const char *uri, struct sockaddr *paddr, int family)
 		return len;
 	} else {
 		/* inet? */
-		char *strport;
+		char *strport = NULL;
 
 		struct addrinfo *ai, hints = {
 			.ai_family = family,
@@ -182,7 +182,7 @@ static int str_to_sockname(const char *uri, struct sockaddr *paddr, int family)
 		} else {
 			strport = strrchr(luri, ':');
 			if (strport)
-				*strport = 0;
+				*strport++ = 0;
 		}
 
 #ifdef AI_NUMERICSERV

@@ -55,7 +55,7 @@ static int iofollow(int argc, char *argv[])
 	int opt;
 	/* parameter indices */
 	int indev, outdev, uoffset;
-	double slope = 1, offset;
+	double slope = 1, offset = 0;
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
