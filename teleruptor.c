@@ -81,9 +81,6 @@ static int set_teleruptor(struct iopar *iopar, double newvalue)
 {
 	struct tr *tr = (struct tr *)iopar;
 
-	if (tobool(newvalue) == tr->newvalue)
-		return 0;
-
 	tr->newvalue = tobool(newvalue);
 	tr->retries = 0;
 	if (tr->state == ST_IDLE)
