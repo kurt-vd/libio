@@ -52,6 +52,8 @@ struct motor {
 	int type;
 	/* backend gpio/pwm's */
 	int out1, out2;
+	int flags;
+		#define INV2	2 /* invert out2 driving, for 'godir' */
 
 	/* direction control */
 	struct iopar dirpar;
@@ -118,13 +120,13 @@ static int change_motor_speed(struct motor *mot, double speed)
 		set_iopar(mot->out1, NAN);
 		set_iopar(mot->out2, NAN);
 	} else if (speed > 0) {
-		if (set_iopar(mot->out2, 0) < 0)
+		if (set_iopar(mot->out2, (mot->flags & INV2) ? 1 : 0) < 0)
 			goto fail_2;
 		if (set_iopar(mot->out1, speed) < 0)
 			goto fail_21;
 	} else if (speed < 0) {
 		if (mot->type == TYPE_GODIR) {
-			if (set_iopar(mot->out2, 1) < 0)
+			if (set_iopar(mot->out2, (mot->flags & INV2) ? 0 : 1) < 0)
 				goto fail_2;
 			if (set_iopar(mot->out1, -speed) < 0)
 				goto fail_21;
@@ -355,6 +357,10 @@ struct iopar *mkmotordir(const char *cstr)
 		}
 		break;
 	case 2:
+		if (*tok == '/') {
+			mot->flags |= INV2;
+			++tok;
+		}
 		mot->out2 = create_iopar(tok);
 		if (mot->out2 <= 0) {
 			error(0, 0, "%s: bad output '%s'", __func__, tok);
@@ -368,9 +374,15 @@ struct iopar *mkmotordir(const char *cstr)
 		break;
 	}
 	if (ntok < 4) {
-		error(0, 0, "%s: need arguments \"[MOTORTYPE(updown|godir)]+OUT1+OUT2+MAXVAL\"", __func__);
+		error(0, 0, "%s: need arguments \"[MOTORTYPE(updown|godir)]+OUT1+[/]OUT2+MAXVAL\"", __func__);
 		goto fail_config;
 	}
+	/* fixups */
+	if (mot->type == TYPE_UPDOWN)
+		/* INV2 makes no sense for updown control */
+		mot->flags &= ~INV2;
+
+	/* final */
 	free(sstr);
 	iopar_set_present(&mot->pospar);
 	iopar_set_present(&mot->dirpar);
