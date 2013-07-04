@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <error.h>
 #include <linux/input.h>
+#include <sys/poll.h>
 
 #include <libevt.h>
 #include "_libio.h"
@@ -127,7 +128,13 @@ static void read_inputdev(int fd, void *data)
 	struct evbtn *btn;
 	int ret;
 	struct input_event ev;
+	struct pollfd pfd = {
+		.fd = fd,
+		.events = POLLIN,
+	};
 
+	do {
+		/* wrong indent, avoided history pollution */
 	ret = read(fd, &ev, sizeof(ev));
 	if (ret <= 0) {
 		error(0, ret ? errno : 0, "%s %s%s",
@@ -140,6 +147,10 @@ static void read_inputdev(int fd, void *data)
 		if (btn->type == ev.type && btn->code == ev.code)
 			evbtn_newdata(btn, &ev);
 	}
+		/* keep busy? */
+		if ((ev.type == EV_SYN) && (ev.code == SYN_REPORT))
+			break;
+	} while (poll(&pfd, 1, 0) == 1);
 }
 
 static struct inputdev *lookup_inputdev(const char *spec)
