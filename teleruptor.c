@@ -17,10 +17,8 @@ struct tr {
 		#define ST_IDLE	0 /* ready to go */
 		#define ST_SET	1 /* output set, wait a bit for reading feedback */
 		#define ST_WAIT	2 /* output released, wait time to stabilize again */
-
-		#define ST_FAIL	(~0) /* teleruptor failed */
 	int retries;
-	int newvalue;
+	int newvalue; /* setpoint */
 };
 
 static inline int tobool(double value)
@@ -57,7 +55,7 @@ static void teleruptor_handler(void *dat)
 		}
 		if (tr->retries >= 3) {
 			error(0, 0, "teleruptor: maximum retry count reached");
-			tr->state = ST_FAIL;
+			tr->state = ST_IDLE;
 			break;
 		}
 		/* fall trough, retry! */
@@ -76,8 +74,6 @@ static void teleruptor_handler(void *dat)
 		teleruptor_update(tr);
 		tr->state = ST_WAIT;
 		break;
-	case ST_FAIL:
-		break;
 	}
 }
 
@@ -85,8 +81,6 @@ static int set_teleruptor(struct iopar *iopar, double newvalue)
 {
 	struct tr *tr = (struct tr *)iopar;
 
-	if (tr->state == ST_FAIL)
-		return -1;
 	if (tobool(newvalue) == tr->newvalue)
 		return 0;
 
