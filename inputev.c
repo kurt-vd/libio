@@ -137,10 +137,8 @@ static void read_inputdev(int fd, void *data)
 	}
 
 	for (btn = dev->btns; btn; btn = btn->next) {
-		if (btn->type == ev.type && btn->code == ev.code) {
+		if (btn->type == ev.type && btn->code == ev.code)
 			evbtn_newdata(btn, &ev);
-			break;
-		}
 	}
 }
 
