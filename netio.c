@@ -525,7 +525,7 @@ static void del_sockparam_hook(struct iopar *iopar)
 	free(par);
 }
 
-struct iopar *mknetiolocal(const char *name)
+struct iopar *mknetiolocal(char *name)
 {
 	struct sockparam *par;
 
@@ -608,15 +608,15 @@ fail_noname:
 	return NULL;
 }
 
-struct iopar *mknetiounix(const char *uri)
+struct iopar *mknetiounix(char *uri)
 {
 	return mknetioremote(uri, PF_UNIX);
 }
-struct iopar *mknetioudp4(const char *uri)
+struct iopar *mknetioudp4(char *uri)
 {
 	return mknetioremote(uri, PF_INET);
 }
-struct iopar *mknetioudp6(const char *uri)
+struct iopar *mknetioudp6(char *uri)
 {
 	return mknetioremote(uri, PF_INET6);
 }

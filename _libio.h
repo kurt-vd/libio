@@ -47,22 +47,21 @@ extern struct iopar *lookup_iopar(int iopar_id);
 extern void cleanup_libiopar(struct iopar *iopar);
 
 /* real parameter constructors */
-extern struct iopar *mkpreset(const char *str);
-extern struct iopar *mkvirtual(const char *str);
-extern struct iopar *mkshared(const char *cstr);
-extern struct iopar *mkled(const char *str);
-extern struct iopar *mkledbool(const char *str);
-extern struct iopar *mkbacklight(const char *str);
-extern struct iopar *mkinputevbtn(const char *str);
-extern struct iopar *mkapplelight(const char *sysfs);
-extern struct iopar *mkmotordir(const char *cstr);
-extern struct iopar *mkmotorpos(const char *cstr);
-extern struct iopar *mkteleruptor(const char *cstr);
-extern struct iopar *mkvirtualteleruptor(const char *str);
+extern struct iopar *mkpreset(char *str);
+extern struct iopar *mkvirtual(char *str);
+extern struct iopar *mkshared(char *cstr);
+extern struct iopar *mkled(char *str);
+extern struct iopar *mkbacklight(char *str);
+extern struct iopar *mkinputevbtn(char *str);
+extern struct iopar *mkapplelight(char *sysfs);
+extern struct iopar *mkmotordir(char *str);
+extern struct iopar *mkmotorpos(char *str);
+extern struct iopar *mkteleruptor(char *str);
+extern struct iopar *mkvirtualteleruptor(char *str);
 
-extern struct iopar *mknetiolocal(const char *name);
-extern struct iopar *mknetiounix(const char *uri);
-extern struct iopar *mknetioudp4(const char *uri);
-extern struct iopar *mknetioudp6(const char *uri);
+extern struct iopar *mknetiolocal(char *name);
+extern struct iopar *mknetiounix(char *uri);
+extern struct iopar *mknetioudp4(char *uri);
+extern struct iopar *mknetioudp6(char *uri);
 
 #endif

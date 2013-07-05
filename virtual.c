@@ -68,7 +68,7 @@ static void del_virtual(struct iopar *iopar)
 	free(virt);
 }
 
-struct iopar *mkvirtual(const char *str)
+struct iopar *mkvirtual(char *str)
 {
 	struct virtualpar *virt;
 	char *endp;
@@ -108,7 +108,7 @@ static int set_virtual_teleruptor(struct iopar *iopar, double value)
 	return ret;
 }
 
-struct iopar *mkvirtualteleruptor(const char *str)
+struct iopar *mkvirtualteleruptor(char *str)
 {
 	struct iopar *iopar;
 

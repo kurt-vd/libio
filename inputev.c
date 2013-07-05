@@ -205,14 +205,12 @@ static void del_evbtn_hook(struct iopar *iopar)
 	free(btn);
 }
 
-struct iopar *mkinputevbtn(const char *cstr)
+struct iopar *mkinputevbtn(char *str)
 {
 	struct evbtn *btn;
 	struct inputdev *dev;
-	char *str, *tok;
+	char *tok;
 	int flag;
-
-	str = strdup(cstr);
 
 	btn = zalloc(sizeof(*btn));
 	btn->iopar.del = del_evbtn_hook;
@@ -223,9 +221,9 @@ struct iopar *mkinputevbtn(const char *cstr)
 	btn->type = strtoul(strtok(NULL, ":;,") ?: "1", NULL, 0);
 	btn->code = strtoul(strtok(NULL, ":;,") ?: "0", NULL, 0);
 	if (!btn->code)
-		error(0, 0, "'%s': no code or zero?", cstr);
+		error(0, 0, "input: no code or zero?");
 	while (1) {
-		tok = strtok(NULL, ":;,");
+		tok = strtok(NULL, ",");
 		if (!tok)
 			break;
 		flag = strlookup(tok, strflags);
@@ -242,7 +240,5 @@ struct iopar *mkinputevbtn(const char *cstr)
 	/* set as present */
 	iopar_set_present(&btn->iopar);
 	btn->iopar.state &= ~ST_DIRTY;
-
-	free(str);
 	return &btn->iopar;
 }

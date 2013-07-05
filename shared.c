@@ -113,7 +113,7 @@ static void del_shared(struct iopar *iopar)
 	free(spar);
 }
 
-struct iopar *mkshared(const char *cstr)
+struct iopar *mkshared(char *cstr)
 {
 	struct sharedpar *spar;
 	struct shared *shared;

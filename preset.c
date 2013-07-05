@@ -102,7 +102,7 @@ static void free_presets(void)
 	}
 }
 
-struct iopar *mkpreset(const char *str)
+struct iopar *mkpreset(char *str)
 {
 	struct lookup *lp;
 

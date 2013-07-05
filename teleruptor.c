@@ -97,31 +97,21 @@ static void del_teleruptor(struct iopar *iopar)
 	destroy_iopar(tr->out);
 }
 
-struct iopar *mkteleruptor(const char *cstr)
+struct iopar *mkteleruptor(char *str)
 {
-	char *sstr = strdup(cstr);
-	char *pstr;
 	struct tr *tr;
-
-	pstr = strchr(sstr, '+');
-	if (!pstr) {
-		error(0, 0, "bad teleruptor spec '%s'", cstr);
-		goto fail_spec;
-	}
-	*pstr++ = 0;
 
 	tr = zalloc(sizeof(*tr));
 	tr->iopar.del = del_teleruptor;
 	tr->iopar.set = set_teleruptor;
 	tr->iopar.value = FP_NAN;
 
-	tr->out = create_iopar(sstr);
+	tr->out = create_iopar(strtok(str, "+"));
 	if (tr->out < 0)
 		goto fail_out;
-	tr->fdb = create_iopar(pstr);
+	tr->fdb = create_iopar(strtok(NULL, "+"));
 	if (tr->fdb < 0)
 		goto fail_fdb;
-	free(sstr);
 	/* preset initial state */
 	teleruptor_update(tr);
 	return &tr->iopar;
@@ -130,7 +120,5 @@ fail_fdb:
 	destroy_iopar(tr->out);
 fail_out:
 	free(tr);
-fail_spec:
-	free(sstr);
 	return NULL;
 }

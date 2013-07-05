@@ -111,13 +111,12 @@ int schedule_itimer(double v)
 /* iopars */
 static const struct {
 	const char *prefix;
-	struct iopar *(*create)(const char *str);
+	struct iopar *(*create)(char *str);
 } iotypes[] = {
 	{ "preset", mkpreset, },
 	{ "virtual", mkvirtual, },
 	{ "shared", mkshared, },
 	{ "led", mkled, },
-	{ "bled", mkledbool, },
 	{ "backlight", mkbacklight, },
 	{ "button", mkinputevbtn, },
 	{ "kbd", mkinputevbtn, },
@@ -187,13 +186,13 @@ struct iopar *create_libiopar(const char *str)
 
 	sep = strchr(str, ':');
 	if (!sep)
-		return mkpreset(str);
+		return mkpreset(strdupa(str));
 
 	len = sep - str;
 	iostr = sep + 1;
 	for (j = 0; iotypes[j].prefix; ++j) {
 		if (!strncmp(iotypes[j].prefix, str, len))
-			return iotypes[j].create(iostr);
+			return iotypes[j].create(strdupa(iostr));
 	}
 	return NULL;
 }
@@ -205,7 +204,7 @@ int create_iopar_type(const char *type, const char *spec)
 
 	for (j = 0; iotypes[j].prefix; ++j) {
 		if (!strcmp(iotypes[j].prefix, type)) {
-			iopar = iotypes[j].create(spec);
+			iopar = iotypes[j].create(strdupa(spec));
 			if (!iopar)
 				break;
 			add_iopar(iopar);

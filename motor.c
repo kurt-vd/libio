@@ -314,7 +314,7 @@ static void del_motor_pos(struct iopar *iopar)
  */
 static struct iopar *next_pospar;
 
-struct iopar *mkmotorpos(const char *cstr)
+struct iopar *mkmotorpos(char *cstr)
 {
 	struct iopar *result;
 
@@ -324,12 +324,11 @@ struct iopar *mkmotorpos(const char *cstr)
 	return result;
 }
 
-struct iopar *mkmotordir(const char *cstr)
+struct iopar *mkmotordir(char *sstr)
 {
 	struct motor *mot;
 	char *tok;
 	int ntok;
-	char *sstr = strdup(cstr);
 
 	mot = zalloc(sizeof(*mot));
 	mot->dirpar.del = del_motor_dir;
@@ -383,7 +382,6 @@ struct iopar *mkmotordir(const char *cstr)
 		mot->flags &= ~INV2;
 
 	/* final */
-	free(sstr);
 	iopar_set_present(&mot->pospar);
 	iopar_set_present(&mot->dirpar);
 	/* save next pospar */
@@ -396,6 +394,5 @@ fail_config:
 	if (mot->out1)
 		destroy_iopar(mot->out1);
 	free(mot);
-	free(sstr);
 	return NULL;
 }

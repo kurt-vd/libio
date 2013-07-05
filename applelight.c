@@ -73,7 +73,7 @@ static void del_applelight(struct iopar *iopar)
 	free(al);
 }
 
-struct iopar *mkapplelight(const char *sysfs)
+struct iopar *mkapplelight(char *sysfs)
 {
 	struct applelight *al;
 
