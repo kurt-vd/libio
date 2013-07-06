@@ -18,6 +18,14 @@ extern void *zalloc(unsigned int size);
  */
 extern int strlookup(const char *str, const char *const table[]);
 
+/*
+ * Given a string like 'name=horse,color=gray,tall',
+ * mygetsubopt returns 'name', 'color', 'tall'
+ * and puts 'horse', 'gray', NULL in *value
+ */
+extern const char *mygetsubopt(char *key);
+extern const char *mygetsuboptvalue(void);
+
 /* sysfs (or any other file) iface */
 extern int attr_read(int default_value, const char *fmt, ...)
 	__attribute__((format(printf,2,3)));
