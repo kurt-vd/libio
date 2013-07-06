@@ -141,6 +141,7 @@ static const struct {
 	{ "shared", mkshared, },
 	{ "led", mkled, },
 	{ "backlight", mkbacklight, },
+	{ "in", mkinputevbtn, },
 	{ "button", mkinputevbtn, },
 	{ "kbd", mkinputevbtn, },
 	{ "applelight", mkapplelight, },
