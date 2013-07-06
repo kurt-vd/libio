@@ -12,7 +12,7 @@
 /* ARGUMENTS */
 static const char help_msg[] =
 	NAME ": dumb control of N ouputs with N inputs\n"
-	"Usage: " NAME " [OPTIONS] NAME IN OUT [NAME2 IN2 OUT2 ...]\n"
+	"Usage: " NAME " [OPTIONS] NAME=OUT [IN [...]] [NAME=OUT ...] ...\n"
 	"\n"
 	"Options:\n"
 	" -V, --version		Show version\n"
@@ -36,10 +36,12 @@ static const struct option long_opts[] = {
 
 static const char optstring[] = "?Vvl:";
 
+#define MAX_IN 3
 struct link {
 	struct link *next;
+	int nin;
 	/* local params */
-	int in, out;
+	int out, in[MAX_IN];
 	/* public params */
 	int pub;
 };
@@ -51,8 +53,9 @@ static struct args {
 
 static int hadirect(int argc, char *argv[])
 {
-	int opt;
+	int opt, j;
 	struct link *lnk;
+	char *streq;
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
@@ -81,13 +84,24 @@ static int hadirect(int argc, char *argv[])
 	}
 
 	/* create common input */
-	for (; (optind + 3) <= argc; optind += 3) {
-		lnk = zalloc(sizeof(*lnk));
-		lnk->pub = create_iopar_type("netio", argv[optind]);
-		lnk->in = create_iopar(argv[optind+1]);
-		lnk->out = create_iopar(argv[optind+2]);
-		lnk->next = s.links;
-		s.links = lnk;
+	for (; optind < argc; ++optind) {
+		streq = strchr(argv[optind], '=');
+		if (streq) {
+			/* new entry */
+			*streq++ = 0;
+			lnk = zalloc(sizeof(*lnk));
+			lnk->pub = create_iopar_type("netio", argv[optind]);
+			lnk->out = create_iopar(streq);
+			/* add link */
+			lnk->next = s.links;
+			s.links = lnk;
+		} else if (s.links && (s.links->nin < MAX_IN)) {
+			/* add input */
+			lnk = s.links;
+			lnk->in[lnk->nin++] = create_iopar(argv[optind]);
+		} else {
+			error(1, 0, ">%i input for 1 output, or no output defined", MAX_IN);
+		}
 	}
 
 	/* main ... */
@@ -99,10 +113,13 @@ static int hadirect(int argc, char *argv[])
 				set_iopar(lnk->out, get_iopar(lnk->pub, 0));
 				set_iopar(lnk->pub, get_iopar(lnk->out, 0));
 			}
-			if (iopar_dirty(lnk->in) && (get_iopar(lnk->in, 0) > 0.5)) {
-				/* local button input pressed, toggle */
-				set_iopar(lnk->out, !(int)get_iopar(lnk->out, 0));
-				set_iopar(lnk->pub, get_iopar(lnk->out, 0));
+			for (j = 0; j < lnk->nin; ++j) {
+				if (iopar_dirty(lnk->in[j]) &&
+						(get_iopar(lnk->in[j], 0) > 0.5)) {
+					/* local button input pressed, toggle */
+					set_iopar(lnk->out, !(int)get_iopar(lnk->out, 0));
+					set_iopar(lnk->pub, get_iopar(lnk->out, 0));
+				}
 			}
 		}
 
