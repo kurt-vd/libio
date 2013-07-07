@@ -10,6 +10,9 @@ LDFLAGS =
 LDLIBS	= -levt -lllist -lm -lrt
 STRIP	= strip
 
+GPSLON	= NAN
+GPSLAT	= NAN
+
 -include config.mk
 CPPFLAGS += -DLOCALVERSION=\"$(LOCALVERSION)\"
 
@@ -17,7 +20,7 @@ CPPFLAGS += -DLOCALVERSION=\"$(LOCALVERSION)\"
 	@echo " CC $<"
 	@$(CC) -c -o $@ -DNAME=\"$*\" $(CPPFLAGS) $(CFLAGS) $<
 
-libio.a: libio.o led.o inputev.o netio.o virtual.o shared.o \
+libio.a: libio.o led.o inputev.o netio.o virtual.o shared.o defaults.o \
 	applelight.o preset.o \
 	motor.o \
 	teleruptor.o
@@ -34,12 +37,7 @@ io: io.o iofollow.o ioserver.o ioprobe.o iotoggle.o \
 	@$(CC) -o $@ -DNAME=\"$@\" $(LDFLAGS) $^ $(LDLIBS)
 
 # specific programs without libio
-ifdef GPSLON
-suntellposition.o: CPPFLAGS += -DDEFAULT_LON=$(GPSLON)
-endif
-ifdef GPSLAT
-suntellposition.o: CPPFLAGS += -DDEFAULT_LAT=$(GPSLAT)
-endif
+defaults.o: CPPFLAGS += -DGPSLON=$(GPSLON) -DGPSLAT=$(GPSLAT)
 
 clean:
 	rm -f libio.a $(PROGS) $(wildcard *.o libllist/*.o libevt/*.o)

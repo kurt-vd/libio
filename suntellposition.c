@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+#include <math.h>
 
 #include <unistd.h>
 #include <error.h>
@@ -119,13 +120,12 @@ int suntellposition(int argc, char *argv[])
 	}
 
 	if (optind+2 > argc) {
-#if defined(DEFAULT_LAT) && defined(DEFAULT_LON)
-		lat = DEFAULT_LAT;
-		lon = DEFAULT_LON;
-#else
-		fputs(help_msg, stderr);
-		exit(1);
-#endif
+		lat = default_gpslat;
+		lon = default_gpslon;
+		if (isnan(lat) || isnan(lon)) {
+			fputs(help_msg, stderr);
+			exit(1);
+		}
 	} else {
 		lat = strtod(argv[optind], 0);
 		lon = strtod(argv[optind+1], 0);
