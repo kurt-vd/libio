@@ -26,6 +26,7 @@ libio.a: libio.o led.o inputev.o netio.o virtual.o shared.o \
 
 io: io.o iofollow.o ioserver.o ioprobe.o iotoggle.o \
 	hadirect.o hamotor.o hasingletouch.o haspawn.o \
+	ha2addons.o \
 	suntellposition.o sunposition.o \
 	macbookd.o \
 	libio.a
