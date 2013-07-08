@@ -100,16 +100,17 @@ static void del_teleruptor(struct iopar *iopar)
 struct iopar *mkteleruptor(char *str)
 {
 	struct tr *tr;
+	char *savedstr;
 
 	tr = zalloc(sizeof(*tr));
 	tr->iopar.del = del_teleruptor;
 	tr->iopar.set = set_teleruptor;
 	tr->iopar.value = FP_NAN;
 
-	tr->out = create_iopar(strtok(str, "+"));
+	tr->out = create_iopar(strtok_r(str, "+", &savedstr));
 	if (tr->out < 0)
 		goto fail_out;
-	tr->fdb = create_iopar(strtok(NULL, "+"));
+	tr->fdb = create_iopar(strtok_r(NULL, "+", &savedstr));
 	if (tr->fdb < 0)
 		goto fail_fdb;
 	/* preset initial state */

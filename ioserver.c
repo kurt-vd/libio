@@ -50,6 +50,7 @@ static int ioserver(int argc, char *argv[])
 {
 	int opt, j;
 	struct link *lnk;
+	char *sep;
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
@@ -73,9 +74,13 @@ static int ioserver(int argc, char *argv[])
 	libio_set_trace(s.verbose);
 
 	for (j = optind; j < argc; ++j) {
+		sep = strchr(argv[j], '=');
+		if (!sep)
+			continue;
+		*sep++ = 0;
 		lnk = zalloc(sizeof(*lnk));
-		lnk->a = create_iopar_type("netio", strtok(argv[j], "="));
-		lnk->b = create_iopar(strtok(NULL, "="));
+		lnk->a = create_iopar_type("netio", argv[j]);
+		lnk->b = create_iopar(sep);
 		lnk->next = s.links;
 		s.links = lnk;
 	}

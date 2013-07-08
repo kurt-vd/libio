@@ -324,10 +324,10 @@ struct iopar *mkmotorpos(char *cstr)
 	return result;
 }
 
-struct iopar *mkmotordir(char *sstr)
+struct iopar *mkmotordir(char *str)
 {
 	struct motor *mot;
-	char *tok;
+	char *tok, *saved;
 	int ntok;
 
 	mot = zalloc(sizeof(*mot));
@@ -339,7 +339,7 @@ struct iopar *mkmotordir(char *sstr)
 	mot->pospar.set = set_motor_pos;
 	mot->pospar.value = 0;
 
-	for (ntok = 0, tok = strtok(sstr, "+"); tok; ++ntok, tok = strtok(NULL, "+"))
+	for (ntok = 0, tok = strtok_r(str, "+", &saved); tok; ++ntok, tok = strtok_r(NULL, "+", &saved))
 	switch (ntok) {
 	case 0:
 		mot->type = lookup_motor_type(tok);

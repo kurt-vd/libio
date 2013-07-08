@@ -284,7 +284,7 @@ static void read_iosocket(int fd, void *data)
 	struct sockparam *par;
 	socklen_t namelen;
 	int ret, recvlen, saved_remote_flags;
-	char *tok, *dat;
+	char *tok, *dat, *savedstr;
 	union sockaddrs name;
 
 	/* fetch packet */
@@ -315,7 +315,7 @@ static void read_iosocket(int fd, void *data)
 
 	/* parse packet */
 	saved_remote_flags = remote->flags;
-	for (tok = strtok(pktbuf, "\n"); tok; tok = strtok(NULL, "\n")) {
+	for (tok = strtok_r(pktbuf, "\n", &savedstr); tok; tok = strtok_r(NULL, "\n", &savedstr)) {
 		if (*tok == '*') {
 			/* special command */
 			if (!strncmp(tok, "*keepalive", 8)) {
