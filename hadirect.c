@@ -112,6 +112,8 @@ static int hadirect(int argc, char *argv[])
 				/* remote command received, process first */
 				set_iopar(lnk->out, get_iopar(lnk->pub, 0));
 				set_iopar(lnk->pub, get_iopar(lnk->out, 0));
+			} else if (iopar_dirty(lnk->out)) {
+				set_iopar(lnk->pub, get_iopar(lnk->out, 0));
 			}
 			for (j = 0; j < lnk->nin; ++j) {
 				if (iopar_dirty(lnk->in[j]) &&
