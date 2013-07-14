@@ -55,7 +55,7 @@ static struct args {
 
 static inline int btnpushed(int iopar)
 {
-	return iopar_dirty(iopar) && (get_iopar(iopar, 0) >= 0.5);
+	return iopar_dirty(iopar) && (get_iopar(iopar, NAN) >= 0.5);
 }
 
 static int ha2addons(int argc, char *argv[])
