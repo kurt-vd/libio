@@ -2,12 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <time.h>
+#include <math.h>
 
 #include <error.h>
 #include <getopt.h>
 
 #include <libevt.h>
 #include "_libio.h"
+
+#define HOUR *3600
 
 /* ARGUMENTS */
 static const char help_msg[] =
@@ -26,6 +30,7 @@ static const char help_msg[] =
 	" hal\n"
 	" veluxhg veluxlg\n"
 	"Required inputs:\n"
+	" badk\n"
 	" alloff\n"
 	" poets\n"
 	;
@@ -50,7 +55,7 @@ static struct args {
 	int led, zolder, fan, lavabo, bad,
 	    bluebad, main, blueled, hal,
 	    veluxhg, veluxlg;
-	int alloff, poets;
+	int badk, alloff, poets;
 } s;
 
 static inline int btnpushed(int iopar)
@@ -58,6 +63,21 @@ static inline int btnpushed(int iopar)
 	return iopar_dirty(iopar) && (get_iopar(iopar, NAN) >= 0.5);
 }
 
+static inline int lavabo_dimmed(void)
+{
+	time_t now;
+	struct tm tm;
+	unsigned long mins;
+
+	time(&now);
+	tm = *localtime(&now);
+	mins = tm.tm_hour * 60 + tm.tm_min;
+#define MINS(H, M) (((H)*60)+(M))
+
+	return !((mins > MINS(7, 0)) && (mins < MINS(23, 30)));
+}
+
+/* main */
 static int ha2addons(int argc, char *argv[])
 {
 	int opt;
@@ -91,11 +111,28 @@ static int ha2addons(int argc, char *argv[])
 	s.veluxhg = create_iopar("veluxhg");
 	s.veluxlg = create_iopar("veluxlg");
 
+	s.badk = create_iopar("badk");
 	s.alloff = create_iopar("alloff");
 	s.poets = create_iopar("poets");
 
 	/* main ... */
 	while (1) {
+		/* special badkamer input */
+
+		if (btnpushed(s.badk)) {
+			if (get_iopar(s.led, NAN) < 0.01) {
+				if (lavabo_dimmed()) {
+					set_iopar(s.led, 0.025);
+					set_iopar(s.lavabo, 0);
+				} else {
+					set_iopar(s.led, 1);
+					set_iopar(s.lavabo, 1);
+				}
+			} else {
+				set_iopar(s.led, 0);
+				set_iopar(s.lavabo, 0);
+			}
+		}
 		/* all off */
 		if (btnpushed(s.alloff)) {
 			set_iopar(s.led, 0);
