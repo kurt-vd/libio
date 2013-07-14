@@ -11,6 +11,10 @@
 #include <libevt.h>
 #include "_libio.h"
 
+/* configs */
+#define NBADK	4
+
+/* definitions */
 #define HOUR *3600
 
 /* ARGUMENTS */
@@ -30,7 +34,7 @@ static const char help_msg[] =
 	" hal\n"
 	" veluxhg veluxlg\n"
 	"Required inputs:\n"
-	" badk\n"
+	" badk badk2 badk3 ...\n"
 	" alloff\n"
 	" poets\n"
 	;
@@ -55,12 +59,23 @@ static struct args {
 	int led, zolder, fan, lavabo, bad,
 	    bluebad, main, blueled, hal,
 	    veluxhg, veluxlg;
-	int badk, alloff, poets;
+	int badk[NBADK], alloff, poets;
 } s;
 
 static inline int btnpushed(int iopar)
 {
 	return iopar_dirty(iopar) && (get_iopar(iopar, NAN) >= 0.5);
+}
+
+static inline int btnspushed(const int *iopars, int niopars)
+{
+	int j;
+
+	for (j = 0; j < niopars; ++j) {
+		if (btnpushed(iopars[j]))
+			return 1;
+	}
+	return 0;
 }
 
 static inline int lavabo_dimmed(void)
@@ -125,7 +140,10 @@ static int ha2addons(int argc, char *argv[])
 	s.veluxhg = create_iopar("veluxhg");
 	s.veluxlg = create_iopar("veluxlg");
 
-	s.badk = create_iopar("badk");
+	s.badk[0] = create_iopar("badk");
+	s.badk[1] = create_iopar("badk2");
+	s.badk[2] = create_iopar("badk3");
+	s.badk[3] = create_iopar("badk4");
 	s.alloff = create_iopar("alloff");
 	s.poets = create_iopar("poets");
 
@@ -133,7 +151,7 @@ static int ha2addons(int argc, char *argv[])
 	while (1) {
 		/* special badkamer input */
 
-		if (btnpushed(s.badk)) {
+		if (btnspushed(s.badk, NBADK)) {
 			if (get_iopar(s.led, NAN) < 0.01) {
 				if (lavabo_dimmed()) {
 					set_iopar(s.led, 0.025);
