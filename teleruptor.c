@@ -83,8 +83,12 @@ static int set_teleruptor(struct iopar *iopar, double newvalue)
 
 	tr->newvalue = tobool(newvalue);
 	tr->retries = 0;
-	if (tr->state == ST_IDLE)
-		teleruptor_handler(tr);
+	if (tr->state == ST_IDLE) {
+		teleruptor_update(tr);
+		if (tr->newvalue != tobool(tr->iopar.value))
+			/* change required */
+			teleruptor_handler(tr);
+	}
 	/* else: wait for the timeout */
 	return 0; /* no real return code present yet */
 }
