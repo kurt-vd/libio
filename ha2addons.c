@@ -77,6 +77,20 @@ static inline int lavabo_dimmed(void)
 	return !((mins > MINS(7, 0)) && (mins < MINS(23, 30)));
 }
 
+/* output timer */
+static void output_timeout(void *dat)
+{
+	set_iopar((long)dat, 0);
+}
+
+static void schedule_output_reset_timer(int iopar, double timeout)
+{
+	if (iopar_dirty(iopar) && (get_iopar(iopar, NAN) > 0))
+		evt_add_timeout(60*60*1.5, output_timeout, (void *)(long)iopar);
+	else if (iopar_dirty(iopar) && (get_iopar(iopar, NAN) < 0.001))
+		evt_remove_timeout(output_timeout, (void *)(long)iopar);
+}
+
 /* main */
 static int ha2addons(int argc, char *argv[])
 {
@@ -163,6 +177,11 @@ static int ha2addons(int argc, char *argv[])
 				set_iopar(s.main, 1);
 			}
 		}
+
+		/* reset FAN */
+		schedule_output_reset_timer(s.fan, 1.5 HOUR);
+		/* reset zolder light */
+		schedule_output_reset_timer(s.zolder, 2 HOUR);
 
 		libio_flush();
 		if (evt_loop(-1) < 0) {
