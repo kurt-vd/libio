@@ -112,7 +112,7 @@ static const char *posname(const char *str)
 static int hamotor(int argc, char *argv[])
 {
 	int opt, short_press_event, j;
-	char *name;
+	char *sep, *tmpstr;
 	struct link *lnk;
 	double value;
 
@@ -155,16 +155,21 @@ static int hamotor(int argc, char *argv[])
 	}
 
 	for (; optind < argc; ++optind) {
+		tmpstr = strdup(argv[optind]);
+		sep = strchr(tmpstr, '=');
+		if (!sep)
+			error(0, 0, "bad spec '%s', missing '='", tmpstr);
+		*sep++ = 0;
 		lnk = zalloc(sizeof(*lnk));
-		name = strtok(argv[optind], "=");
-		lnk->pdmot = create_iopar_type("netio", name);
-		lnk->ppmot = create_iopar_type("netio", posname(name));
-		lnk->dmot = create_iopar(strtok(NULL, "="));
+		lnk->pdmot = create_iopar_type("netio", tmpstr);
+		lnk->ppmot = create_iopar_type("netio", posname(tmpstr));
+		lnk->dmot = create_iopar(sep);
 		lnk->pmot = create_iopar("pmotor:");
 		lnk->next = s.links;
 		s.links = lnk;
 		/* preset lastdir to a nonzero default */
 		lnk->lastdir = -1;
+		free(tmpstr);
 	}
 
 	short_press_event = 0;

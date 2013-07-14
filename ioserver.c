@@ -48,9 +48,9 @@ static struct args {
 
 static int ioserver(int argc, char *argv[])
 {
-	int opt, j;
+	int opt;
 	struct link *lnk;
-	char *sep;
+	char *sep, *tmpstr;
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
@@ -73,16 +73,18 @@ static int ioserver(int argc, char *argv[])
 	}
 	libio_set_trace(s.verbose);
 
-	for (j = optind; j < argc; ++j) {
-		sep = strchr(argv[j], '=');
+	for (; optind < argc; ++optind) {
+		tmpstr = strdup(argv[optind]);
+		sep = strchr(tmpstr, '=');
 		if (!sep)
 			continue;
 		*sep++ = 0;
 		lnk = zalloc(sizeof(*lnk));
-		lnk->a = create_iopar_type("netio", argv[j]);
+		lnk->a = create_iopar_type("netio", tmpstr);
 		lnk->b = create_iopar(sep);
 		lnk->next = s.links;
 		s.links = lnk;
+		free(tmpstr);
 	}
 
 	/* main ... */

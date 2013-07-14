@@ -12,7 +12,7 @@
 #include "_libio.h"
 
 /* configs */
-#define NBADK	4
+#define NBADK	3
 
 /* definitions */
 #define HOUR *3600
@@ -143,7 +143,6 @@ static int ha2addons(int argc, char *argv[])
 	s.badk[0] = create_iopar("badk");
 	s.badk[1] = create_iopar("badk2");
 	s.badk[2] = create_iopar("badk3");
-	s.badk[3] = create_iopar("badk4");
 	s.alloff = create_iopar("alloff");
 	s.poets = create_iopar("poets");
 

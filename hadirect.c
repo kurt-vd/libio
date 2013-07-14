@@ -55,7 +55,7 @@ static int hadirect(int argc, char *argv[])
 {
 	int opt, j;
 	struct link *lnk;
-	char *streq;
+	char *streq, *tmpstr;
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
@@ -85,12 +85,13 @@ static int hadirect(int argc, char *argv[])
 
 	/* create common input */
 	for (; optind < argc; ++optind) {
-		streq = strchr(argv[optind], '=');
+		tmpstr = strdup(argv[optind]);
+		streq = strchr(tmpstr, '=');
 		if (streq) {
 			/* new entry */
 			*streq++ = 0;
 			lnk = zalloc(sizeof(*lnk));
-			lnk->pub = create_iopar_type("netio", argv[optind]);
+			lnk->pub = create_iopar_type("netio", tmpstr);
 			lnk->out = create_iopar(streq);
 			/* add link */
 			lnk->next = s.links;
@@ -98,10 +99,11 @@ static int hadirect(int argc, char *argv[])
 		} else if (s.links && (s.links->nin < MAX_IN)) {
 			/* add input */
 			lnk = s.links;
-			lnk->in[lnk->nin++] = create_iopar(argv[optind]);
+			lnk->in[lnk->nin++] = create_iopar(tmpstr);
 		} else {
 			error(1, 0, ">%i input for 1 output, or no output defined", MAX_IN);
 		}
+		free(tmpstr);
 	}
 
 	/* main ... */
