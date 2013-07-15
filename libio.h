@@ -53,6 +53,9 @@ extern int iopar_present(int iopar);
 extern const char *libio_next_preset(const char *name);
 extern const char *libio_get_preset(const char *name);
 
+/* fetch with constant from /etc/libio-const.conf */
+extern double libio_const(const char *name);
+
 /* netio: publish local parameter via this socket */
 extern int libio_bind_net(const char *uri);
 
