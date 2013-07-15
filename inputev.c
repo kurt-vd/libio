@@ -14,6 +14,22 @@
 
 #define NCODES	(KEY_MAX + 1)
 
+/* bitops */
+#define NINTS(x)	(((x) + sizeof(int) -1) / sizeof(int))
+#define	getbit(x, ptr)	(((ptr)[(x)/sizeof(int)] >> ((x)%sizeof(int))) & 1)
+
+static inline void setbit(int value, int bit, int *ptr)
+{
+	ptr += bit/sizeof(int);
+	bit %= sizeof(int);
+	
+	if (value)
+		*ptr |= 1 << bit;
+	else
+		*ptr &= ~(1 << bit);
+}
+
+/* decl */
 struct inputdev;
 
 static const char *const strflags[] = {
@@ -36,6 +52,7 @@ struct inputdev {
 	struct inputdev *next;
 	int fd;
 	struct evbtn *btns;
+	int cache[NINTS(NCODES)];
 	char file[2];
 };
 
@@ -128,20 +145,22 @@ static void read_inputdev(int fd, void *data)
 	struct evbtn *btn;
 	int ret;
 	struct input_event ev;
-	struct pollfd pfd = {
-		.fd = fd,
-		.events = POLLIN,
-	};
 
-	do {
+	while (1) {
 		/* wrong indent, avoided history pollution */
 	ret = read(fd, &ev, sizeof(ev));
 	if (ret <= 0) {
+		if (errno == EAGAIN)
+			/* blocked */
+			break;
 		error(0, ret ? errno : 0, "%s %s%s",
 				__func__, dev->file, ret ? "" : ": EOF");
 		free_inputdev(dev);
 		return;
 	}
+		/* keep cache */
+		if (ev.type == EV_KEY)
+			setbit(ev.value ? 1 : 0, ev.code, dev->cache);
 
 	for (btn = dev->btns; btn; btn = btn->next) {
 		if (btn->type == ev.type && btn->code == ev.code)
@@ -150,7 +169,7 @@ static void read_inputdev(int fd, void *data)
 		/* keep busy? */
 		if ((ev.type == EV_SYN) && (ev.code == SYN_REPORT))
 			break;
-	} while (poll(&pfd, 1, 0) == 1);
+	}
 }
 
 static struct inputdev *lookup_inputdev(const char *spec)
@@ -180,10 +199,15 @@ static struct inputdev *lookup_inputdev(const char *spec)
 	dev = zalloc(sizeof(*dev) + strlen(spec));
 	strcpy(dev->file, spec);
 
-	dev->fd = open(dev->file, O_RDONLY /*| O_CLOEXEC*/);
+	dev->fd = open(dev->file, O_RDONLY /*| O_CLOEXEC*/ | O_NONBLOCK);
 	if (dev->fd < 0)
 		error(1, errno, "open %s", dev->file);
 	fcntl(dev->fd, F_SETFD, fcntl(dev->fd, F_GETFD) | FD_CLOEXEC);
+
+	/* flush initial pending events */
+	read_inputdev(dev->fd, dev);
+
+	/* register */
 	evt_add_fd(dev->fd, read_inputdev, dev);
 	add_inputdev(dev);
 found:
@@ -240,5 +264,11 @@ struct iopar *mkinputevbtn(char *str)
 	/* set as present */
 	iopar_set_present(&btn->iopar);
 	btn->iopar.state &= ~ST_DIRTY;
+
+	/* test initial state */
+	if ((btn->type == EV_KEY) && getbit(btn->code, dev->cache)) {
+		btn->iopar.value = 1;
+		iopar_set_dirty(&btn->iopar);
+	}
 	return &btn->iopar;
 }
