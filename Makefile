@@ -47,6 +47,7 @@ clean:
 
 install: $(PROGS)
 	install --strip-program=$(STRIP) -v -s $^ $(DESTDIR)$(PREFIX)/bin
-	install -v ha2.conf $(DESTDIR)$(PREFIX)/share/libio
+	install -m 0644 -v ha2preset.conf $(DESTDIR)$(PREFIX)/share/libio
+	install -m 0644 -v ha2const.conf $(DESTDIR)$(PREFIX)/share/libio
 	install -v ha2direct.sh $(DESTDIR)$(PREFIX)/libexec
 	install -v ha2veluxg.sh $(DESTDIR)$(PREFIX)/libexec

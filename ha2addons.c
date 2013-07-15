@@ -82,14 +82,14 @@ static inline int lavabo_dimmed(void)
 {
 	time_t now;
 	struct tm tm;
-	unsigned long mins;
+	double hours;
 
 	time(&now);
 	tm = *localtime(&now);
-	mins = tm.tm_hour * 60 + tm.tm_min;
-#define MINS(H, M) (((H)*60)+(M))
+	hours = tm.tm_hour + (tm.tm_min / 60) + (tm.tm_sec / 3600);
 
-	return !((mins > MINS(7, 0)) && (mins < MINS(23, 30)));
+	return !((hours > libio_const("opstaan")) &&
+			(hours < libio_const("inslapen")));
 }
 
 /* output timer */
