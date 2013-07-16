@@ -22,6 +22,7 @@ static const char help_msg[] =
 	" -V, --version		Show version\n"
 	" -v, --verbose		Be more verbose\n"
 	" -f, --follow		Keep reading\n"
+	" -l, --long		Perform long-press detection\n"
 	;
 
 #ifdef _GNU_SOURCE
@@ -30,6 +31,7 @@ static const struct option long_opts[] = {
 	{ "version", no_argument, NULL, 'V', },
 	{ "verbose", no_argument, NULL, 'v', },
 	{ "follow", no_argument, NULL, 'f', },
+	{ "long", no_argument, NULL, 'l', },
 	{ },
 };
 
@@ -38,10 +40,11 @@ static const struct option long_opts[] = {
 	getopt((argc), (argv), (optstring))
 #endif
 
-static const char optstring[] = "+?Vvsf";
+static const char optstring[] = "+?Vvsfl";
 
 static struct args {
 	int verbose;
+	int lpid; /* long-press id, 0 is disabled */
 } s;
 
 static int ioprobe(int argc, char *argv[])
@@ -62,6 +65,9 @@ static int ioprobe(int argc, char *argv[])
 		break;
 	case 'f':
 		follow = 1;
+		break;
+	case 'l':
+		s.lpid = new_longdet();
 		break;
 	case '?':
 	default:
@@ -89,9 +95,14 @@ static int ioprobe(int argc, char *argv[])
 	while (1) {
 		if (iopar_dirty(param)) {
 			double value = get_iopar(param, 0);
+			if (s.lpid)
+				set_longdet(s.lpid, value);
 			switch (actionchar) {
 			default:
 			case 'g':
+			case 'w':
+				if (s.lpid)
+					break;
 				printf("%.3f\n", value);
 				if (!follow)
 					return 0;
@@ -103,9 +114,15 @@ static int ioprobe(int argc, char *argv[])
 			case 's':
 				if (set_iopar(param, modvalue) < 0)
 					error(1, errno, "set output");
-				actionchar = 'g';
+				actionchar = 'w';
 				break;
 			}
+		}
+
+		if (longdet_edge(s.lpid)) {
+			printf("L%i\n", longdet_state(s.lpid));
+			if ((actionchar == 'g') && !follow)
+				return 0;
 		}
 
 		/* enter sleep */
