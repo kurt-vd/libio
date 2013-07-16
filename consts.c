@@ -136,3 +136,21 @@ double libio_const(const char *name)
 	add_entry(name, "nan");
 	return NAN;
 }
+
+/* iterator */
+const char *libio_next_const(const char *name)
+{
+	struct lookup *ptr;
+
+	if (!s.loaded)
+		load_consts();
+
+	if (!name)
+		return s.first ? s.first->key : NULL;
+
+	for (ptr = s.first; ptr; ptr = ptr->next) {
+		if (!strcmp(name, ptr->key))
+			break;
+	}
+	return ptr->next ? ptr->next->key : NULL;
+}
