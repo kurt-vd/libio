@@ -20,8 +20,10 @@ CPPFLAGS += -DLOCALVERSION=\"$(LOCALVERSION)\"
 	@echo " CC $<"
 	@$(CC) -c -o $@ -DNAME=\"$*\" $(CPPFLAGS) $(CFLAGS) $<
 
-libio.a: libio.o led.o inputev.o netio.o virtual.o shared.o defaults.o \
-	applelight.o preset.o \
+libio.a: libio.o led.o inputev.o netio.o \
+	virtual.o shared.o preset.o \
+	defaults.o \
+	applelight.o \
 	motor.o \
 	teleruptor.o
 	@echo " AR $@"
