@@ -78,6 +78,17 @@ static inline int btnspushed(const int *iopars, int niopars)
 	return 0;
 }
 
+static inline int btnsdown(const int *iopars, int niopars)
+{
+	int j;
+
+	for (j = 0; j < niopars; ++j) {
+		if (get_iopar(iopars[j], NAN) > 0.5)
+			return 1;
+	}
+	return 0;
+}
+
 static inline int lavabo_dimmed(void)
 {
 	time_t now;
@@ -110,6 +121,7 @@ static void schedule_output_reset_timer(int iopar, double timeout)
 static int ha2addons(int argc, char *argv[])
 {
 	int opt;
+	int ldbadk;
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
@@ -146,13 +158,18 @@ static int ha2addons(int argc, char *argv[])
 	s.alloff = create_iopar("alloff");
 	s.poets = create_iopar("poets");
 
+	ldbadk = new_longdet();
+
 	/* main ... */
 	while (1) {
 		/* special badkamer input */
 
-		if (btnspushed(s.badk, NBADK)) {
-			if (get_iopar(s.led, NAN) < 0.01) {
-				if (lavabo_dimmed()) {
+		set_longdet(ldbadk, btnsdown(s.badk, NBADK));
+		if (longdet_edge(ldbadk) && longdet_state(ldbadk)) {
+			int longpress = longdet_state(ldbadk) == LONGPRESS;
+
+			if (longpress || get_iopar(s.led, NAN) < 0.01) {
+				if (!longpress && lavabo_dimmed()) {
 					set_iopar(s.led, 0.025);
 					set_iopar(s.lavabo, 0);
 				} else {
