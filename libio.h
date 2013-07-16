@@ -61,6 +61,18 @@ extern const char *libio_next_const(const char *name);
 /* netio: publish local parameter via this socket */
 extern int libio_bind_net(const char *uri);
 
+/* long-press-detection */
+extern int new_longdet(void); /* default delay */
+extern int new_longdet1(double delay);
+extern void set_longdet(int id, double value);
+
+#define SHORTPRESS	1
+#define LONGPRESS	3
+extern int longdet_state(int id);
+#define get_longdet longdet_state
+/* longdet_edge() returns get_longdet when it just changed */
+extern int longdet_edge(int id);
+
 /*
  * iopars_flush
  * called at each main cycle, clears dirty flags

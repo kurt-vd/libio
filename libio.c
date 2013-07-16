@@ -338,6 +338,7 @@ void libio_flush(void)
 {
 	int j;
 
+	longdet_flush();
 	netio_sync();
 	for (j = 1; j < tablesize; ++j) {
 		if (table[j])

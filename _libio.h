@@ -36,6 +36,7 @@ static inline void iopar_clr_present(struct iopar *iopar)
 extern int libio_trace;
 
 extern void netio_sync(void);
+extern void longdet_flush(void);
 
 /* raw create function */
 extern struct iopar *create_libiopar(const char *str);

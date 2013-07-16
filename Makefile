@@ -22,7 +22,7 @@ CPPFLAGS += -DLOCALVERSION=\"$(LOCALVERSION)\"
 
 libio.a: libio.o led.o inputev.o netio.o \
 	virtual.o shared.o preset.o \
-	defaults.o consts.o \
+	defaults.o consts.o longdetection.o \
 	applelight.o \
 	motor.o \
 	teleruptor.o
