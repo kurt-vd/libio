@@ -133,13 +133,13 @@ static int macbookd(int argc, char *argv[])
 		changed = 0;
 
 		if (iopar_dirty(light))
-			set_iopar(nlight, get_iopar(light, 0.5));
+			set_iopar(nlight, get_iopar(light));
 
 		if (iopar_dirty(light) || iopar_dirty(okbd)) {
-			double newvalue = get_iopar(light, 0) * -2 + 1.5;
+			double newvalue = get_iopar(light) * -2 + 1.5;
 
 			newvalue = fit_float(newvalue, 0, 0.5) +
-				get_iopar(okbd, 0);
+				get_iopar(okbd);
 			if (set_iopar(kbd, newvalue) < 0)
 				error(1, errno, "%.3lf > %s", newvalue, s.kbd);
 			set_iopar(nkbd, newvalue);
@@ -147,10 +147,10 @@ static int macbookd(int argc, char *argv[])
 		}
 
 		if (iopar_dirty(light) || iopar_dirty(obl)) {
-			double newvalue = get_iopar(light, 0) * 2 + 0.1;
+			double newvalue = get_iopar(light) * 2 + 0.1;
 
 			newvalue = fit_float(newvalue, 0.05, 1) +
-				get_iopar(obl, 0);
+				get_iopar(obl);
 			if (set_iopar(bl, newvalue) < 0)
 				error(1, errno, "%.3lf > %s", newvalue, s.bl);
 			set_iopar(nbl, newvalue);
@@ -159,9 +159,9 @@ static int macbookd(int argc, char *argv[])
 
 		if (s.verbose && changed)
 			error(0, 0, "light %.3lf kbd %.3lf bl %.3lf",
-					get_iopar(light, 0),
-					get_iopar(kbd, 0),
-					get_iopar(bl, 0));
+					get_iopar(light),
+					get_iopar(kbd),
+					get_iopar(bl));
 
 		/* flush & wait */
 		libio_flush();

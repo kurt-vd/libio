@@ -112,7 +112,7 @@ static int hasingletouch(int argc, char *argv[])
 		/* determine local input */
 		changed = 0;
 		for (j = 0; j < s.nin; ++j) {
-			if (iopar_dirty(s.in[j]) && (get_iopar(s.in[j], 0) > 0.5))
+			if (iopar_dirty(s.in[j]) && (get_iopar(s.in[j]) > 0.5))
 				changed = 1;
 
 		}
@@ -121,7 +121,7 @@ static int hasingletouch(int argc, char *argv[])
 			/* find old value: sum current value */
 			value = 0;
 			for (lnk = s.links; lnk; lnk = lnk->next)
-				value += get_iopar(lnk->out, 0.5);
+				value += get_iopar(lnk->out);
 			/* calc new value */
 			value = ((value / s.nin) >= 0.5) ? 0 : 1;
 			/* set new value */

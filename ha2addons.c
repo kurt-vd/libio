@@ -3,7 +3,6 @@
 #include <string.h>
 #include <errno.h>
 #include <time.h>
-#include <math.h>
 
 #include <error.h>
 #include <getopt.h>
@@ -71,7 +70,7 @@ static struct args {
 
 static inline int btnpushed(int iopar)
 {
-	return iopar_dirty(iopar) && (get_iopar(iopar, NAN) >= 0.5);
+	return iopar_dirty(iopar) && (get_iopar(iopar) >= 0.5);
 }
 
 static inline int btnspushed(const int *iopars, int niopars)
@@ -90,7 +89,7 @@ static inline int btnsdown(const int *iopars, int niopars)
 	int j;
 
 	for (j = 0; j < niopars; ++j) {
-		if (get_iopar(iopars[j], NAN) > 0.5)
+		if (get_iopar(iopars[j]) > 0.5)
 			return 1;
 	}
 	return 0;
@@ -117,9 +116,9 @@ static void output_timeout(void *dat)
 
 static void schedule_output_reset_timer(int iopar, double timeout)
 {
-	if (iopar_dirty(iopar) && (get_iopar(iopar, NAN) > 0))
+	if (iopar_dirty(iopar) && (get_iopar(iopar) > 0))
 		evt_add_timeout(60*60*1.5, output_timeout, (void *)(long)iopar);
-	else if (iopar_dirty(iopar) && (get_iopar(iopar, NAN) < 0.001))
+	else if (iopar_dirty(iopar) && (get_iopar(iopar) < 0.001))
 		evt_remove_timeout(output_timeout, (void *)(long)iopar);
 }
 
@@ -178,7 +177,7 @@ static int ha2addons(int argc, char *argv[])
 		if (longdet_edge(ldbadk) && longdet_state(ldbadk)) {
 			int longpress = longdet_state(ldbadk) == LONGPRESS;
 
-			if (longpress || get_iopar(s.led, NAN) < 0.01) {
+			if (longpress || get_iopar(s.led) < 0.01) {
 				if (!longpress && lavabo_dimmed()) {
 					set_iopar(s.led, s.lednight);
 					set_iopar(s.lavabo, 0);
@@ -205,7 +204,7 @@ static int ha2addons(int argc, char *argv[])
 		}
 
 		if (btnpushed(s.poets)) {
-			if (get_iopar(s.main, 1) >= 0.5) {
+			if (get_iopar(s.main) >= 0.5) {
 				/* turn a lot off */
 				set_iopar(s.led, 0);
 				set_iopar(s.lavabo, 0);

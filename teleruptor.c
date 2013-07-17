@@ -35,7 +35,7 @@ static void teleruptor_update(struct tr *tr)
 		return;
 
 	saved_value = tr->iopar.value;
-	tr->iopar.value = get_iopar(tr->fdb, -1);
+	tr->iopar.value = get_iopar(tr->fdb);
 	if (tobool(saved_value) != tobool(tr->iopar.value))
 		iopar_set_dirty(&tr->iopar);
 	iopar_set_present(&tr->iopar);

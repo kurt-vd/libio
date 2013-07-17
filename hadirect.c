@@ -112,17 +112,17 @@ static int hadirect(int argc, char *argv[])
 			/* PER-link control */
 			if (iopar_dirty(lnk->pub)) {
 				/* remote command received, process first */
-				set_iopar(lnk->out, get_iopar(lnk->pub, 0));
-				set_iopar(lnk->pub, get_iopar(lnk->out, 0));
+				set_iopar(lnk->out, get_iopar(lnk->pub));
+				set_iopar(lnk->pub, get_iopar(lnk->out));
 			} else if (iopar_dirty(lnk->out)) {
-				set_iopar(lnk->pub, get_iopar(lnk->out, 0));
+				set_iopar(lnk->pub, get_iopar(lnk->out));
 			}
 			for (j = 0; j < lnk->nin; ++j) {
 				if (iopar_dirty(lnk->in[j]) &&
-						(get_iopar(lnk->in[j], 0) > 0.5)) {
+						(get_iopar(lnk->in[j]) > 0.5)) {
 					/* local button input pressed, toggle */
-					set_iopar(lnk->out, !(int)get_iopar(lnk->out, 0));
-					set_iopar(lnk->pub, get_iopar(lnk->out, 0));
+					set_iopar(lnk->out, !(int)get_iopar(lnk->out));
+					set_iopar(lnk->pub, get_iopar(lnk->out));
 				}
 			}
 		}

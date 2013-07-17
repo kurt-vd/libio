@@ -81,18 +81,18 @@ static int iotoggle(int argc, char *argv[])
 
 	/* main ... */
 	while (1) {
-		if (iopar_dirty(updev) && (get_iopar(updev, 0) > 0)) {
-			set_iopar(outdev, get_iopar(outdev, 0) + s.step);
+		if (iopar_dirty(updev) && (get_iopar(updev) > 0)) {
+			set_iopar(outdev, get_iopar(outdev) + s.step);
 			if (s.verbose)
-				error(0, 0, "> %.3f", get_iopar(outdev, -1));
+				error(0, 0, "> %.3f", get_iopar(outdev));
 		}
 		if ((downdev && iopar_dirty(downdev) &&
-					(get_iopar(downdev, 0) > 0)) ||
+					(get_iopar(downdev) > 0)) ||
 				(!downdev && iopar_dirty(updev) &&
-					(get_iopar(updev, 1) < 1))) {
-			set_iopar(outdev, get_iopar(outdev, 0) - s.step);
+					(get_iopar(updev) < 1))) {
+			set_iopar(outdev, get_iopar(outdev) - s.step);
 			if (s.verbose)
-				error(0, 0, "> %.3f", get_iopar(outdev, -1));
+				error(0, 0, "> %.3f", get_iopar(outdev));
 		}
 
 		libio_flush();

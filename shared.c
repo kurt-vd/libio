@@ -46,7 +46,7 @@ static int set_shared(struct iopar *iopar, double newvalue)
 		/* I contribute */
 		if (spar->master->busycnt - spar->icontribute) {
 			/* other clients have control too, don't change the value! */
-			if (fabs((newvalue - get_iopar(spar->master->refpar, 0))/newvalue) > 0.001)
+			if (fabs((newvalue - get_iopar(spar->master->refpar))/newvalue) > 0.001)
 				/* busy */
 				return -1;
 		}

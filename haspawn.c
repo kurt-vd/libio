@@ -114,7 +114,7 @@ static int haspawn(int argc, char *argv[])
 	/* main ... */
 	signal(SIGCHLD, sigchld);
 	while (1) {
-		set_longdet(ldid, get_iopar(param, 0));
+		set_longdet(ldid, get_iopar(param));
 		if (longdet_edge(ldid) && (longdet_state(ldid) == s.type))
 			starttorun(argv+optind);
 

@@ -94,7 +94,7 @@ static int ioprobe(int argc, char *argv[])
 	/* main ... */
 	while (1) {
 		if (iopar_dirty(param)) {
-			double value = get_iopar(param, 0);
+			double value = get_iopar(param);
 			if (s.lpid)
 				set_longdet(s.lpid, value);
 			switch (actionchar) {

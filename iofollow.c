@@ -99,14 +99,14 @@ static int iofollow(int argc, char *argv[])
 	/* main ... */
 	while (1) {
 		if (iopar_dirty(indev) || iopar_dirty(uoffset)) {
-			double newvalue = get_iopar(indev, 0) * slope + offset +
-				get_iopar(uoffset, 0);
+			double newvalue = get_iopar(indev) * slope + offset +
+				get_iopar(uoffset);
 			if (!s.dryrun && (set_iopar(outdev, newvalue) < 0))
 				error(1, errno, "set output device %.3lf", newvalue);
 			else if (s.dryrun || s.verbose)
 				error(0, 0, "%.3f +%.3f > %.3f",
-						get_iopar(indev, 0),
-						get_iopar(uoffset, 0),
+						get_iopar(indev),
+						get_iopar(uoffset),
 						newvalue);
 		}
 

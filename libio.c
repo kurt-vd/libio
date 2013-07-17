@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <math.h>
 
 #include <error.h>
 #include <sys/time.h>
@@ -277,13 +278,13 @@ void destroy_iopar(int iopar_id)
 }
 
 /* iopar use */
-double get_iopar(int iopar_id, double default_value)
+double get_iopar(int iopar_id)
 {
 	struct iopar *iopar = _lookup_iopar(iopar_id);
 
 	if (!iopar) {
 		errno = ENODEV;
-		return default_value;
+		return NAN;
 	}
 	if (iopar->jitget)
 		iopar->jitget(iopar);

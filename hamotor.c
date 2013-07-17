@@ -95,7 +95,7 @@ static void remember_dir(struct link *lnk, double dir)
 
 static double get_new_dir(struct link *lnk)
 {
-	int cdir = speed2bool(get_iopar(lnk->dmot, 0));
+	int cdir = speed2bool(get_iopar(lnk->dmot));
 
 	return cdir ? 0 : -lnk->lastdir;
 }
@@ -179,10 +179,10 @@ static int hamotor(int argc, char *argv[])
 		for (j = 0; j < s.nin; ++j) {
 			if (!iopar_dirty(s.in[j])) {
 				/* nothing */
-			} else if (get_iopar(s.in[j], 0) > 0.5) {
+			} else if (get_iopar(s.in[j]) > 0.5) {
 				evt_add_timeout(1, btn_down_timer, NULL);
 				break;
-			} else if (get_iopar(s.in[j], 1) < 0.5) {
+			} else if (get_iopar(s.in[j]) < 0.5) {
 				evt_remove_timeout(btn_down_timer, NULL);
 				short_press_event = !long_press_pending;
 				long_press_pending = 0;
@@ -194,25 +194,25 @@ static int hamotor(int argc, char *argv[])
 			/* PER motor control */
 			if (iopar_dirty(lnk->pdmot)) {
 				/* netio direction set */
-				set_iopar(lnk->dmot, get_iopar(lnk->pdmot, 0));
+				set_iopar(lnk->dmot, get_iopar(lnk->pdmot));
 				/* write back in case the real value didn't change */
-				set_iopar(lnk->pdmot, get_iopar(lnk->dmot, 0));
+				set_iopar(lnk->pdmot, get_iopar(lnk->dmot));
 				/* remember dir */
-				remember_dir(lnk, get_iopar(lnk->dmot, 0));
+				remember_dir(lnk, get_iopar(lnk->dmot));
 			} else if (iopar_dirty(lnk->dmot)) {
 				/*
 				 * motor changed direction itself
 				 * most probably due to position update
 				 */
-				set_iopar(lnk->pdmot, get_iopar(lnk->dmot, 0));
-				remember_dir(lnk, get_iopar(lnk->dmot, 0));
+				set_iopar(lnk->pdmot, get_iopar(lnk->dmot));
+				remember_dir(lnk, get_iopar(lnk->dmot));
 			}
 			/* flush position parameters */
 			if (iopar_dirty(lnk->pmot))
-				set_iopar(lnk->ppmot, get_iopar(lnk->pmot, 0));
+				set_iopar(lnk->ppmot, get_iopar(lnk->pmot));
 			else if (iopar_dirty(lnk->ppmot)) {
-				set_iopar(lnk->pmot, get_iopar(lnk->ppmot, 0));
-				set_iopar(lnk->ppmot, get_iopar(lnk->pmot, 0));
+				set_iopar(lnk->pmot, get_iopar(lnk->ppmot));
+				set_iopar(lnk->ppmot, get_iopar(lnk->pmot));
 			}
 		}
 
@@ -230,12 +230,12 @@ static int hamotor(int argc, char *argv[])
 
 			if (s.current) {
 				set_iopar(s.current->dmot, value);
-				set_iopar(s.current->pdmot, get_iopar(s.current->dmot, 0));
+				set_iopar(s.current->pdmot, get_iopar(s.current->dmot));
 				remember_dir(s.current, value);
 			} else for (lnk = s.links; lnk; lnk = lnk->next) {
 				/* change direction of all motors */
 				set_iopar(lnk->dmot, value);
-				set_iopar(lnk->pdmot, get_iopar(lnk->dmot, 0));
+				set_iopar(lnk->pdmot, get_iopar(lnk->dmot));
 				remember_dir(lnk, value);
 			}
 		}
