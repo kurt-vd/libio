@@ -34,6 +34,7 @@ io: io.o iofollow.o ioserver.o ioprobe.o iotoggle.o \
 	ha2addons.o \
 	suntellposition.o sunposition.o \
 	macbookd.o \
+	info.o \
 	libio.a
 	@echo " CC $@"
 	@$(CC) -o $@ -DNAME=\"$@\" $(LDFLAGS) $^ $(LDLIBS)
