@@ -21,6 +21,7 @@ static const char help_msg[] =
 	" -V, --version		Show version\n"
 	" -v, --verbose		Be more verbose\n"
 
+	" -s, --short		Trigger on short press\n"
 	" -d, --delay=SECS	detect long press\n"
 	;
 
@@ -30,6 +31,7 @@ static const struct option long_opts[] = {
 	{ "version", no_argument, NULL, 'V', },
 	{ "verbose", no_argument, NULL, 'v', },
 
+	{ "short", no_argument, NULL, 's', },
 	{ "delay", required_argument, NULL, 'd', },
 	{ },
 };
@@ -39,12 +41,14 @@ static const struct option long_opts[] = {
 	getopt((argc), (argv), (optstring))
 #endif
 
-static const char optstring[] = "+?Vvd:";
+static const char optstring[] = "+?Vvt:s:";
 
 static struct args {
 	int verbose;
+	int type;
 	double delay;
 } s = {
+	.type = LONGPRESS,
 	.delay = 0.5,
 };
 
@@ -84,6 +88,9 @@ static int haspawn(int argc, char *argv[])
 		return 0;
 	case 'v':
 		++s.verbose;
+		break;
+	case 's':
+		s.type = SHORTPRESS;
 		break;
 	case 'd':
 		s.delay = strtod(optarg, NULL);
