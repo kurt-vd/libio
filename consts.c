@@ -141,16 +141,26 @@ double libio_const(const char *name)
 const char *libio_next_const(const char *name)
 {
 	struct lookup *ptr;
+	static struct lookup *last = NULL;
 
 	if (!s.loaded)
 		load_consts();
 
-	if (!name)
-		return s.first ? s.first->key : NULL;
-
-	for (ptr = s.first; ptr; ptr = ptr->next) {
-		if (!strcmp(name, ptr->key))
-			break;
+	if (!name) {
+		last = s.first;
+		goto done;
+	} else if (last && !strcmp(name, last->key)) {
+		last = last->next;
+		goto done;
 	}
-	return ptr->next ? ptr->next->key : NULL;
+
+	/* lookup */
+	for (ptr = s.first; ptr; ptr = ptr->next) {
+		if (!strcmp(name, ptr->key)) {
+			last = ptr->next;
+			break;
+		}
+	}
+done:
+	return last ? last->key : NULL;
 }
