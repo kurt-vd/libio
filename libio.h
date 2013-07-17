@@ -49,6 +49,10 @@ extern int iopar_dirty(int iopar);
 /* return true when iopar is lost */
 extern int iopar_present(int iopar);
 
+/* access to presets */
+extern const char *libio_next_preset(const char *name);
+extern const char *libio_get_preset(const char *name);
+
 /* netio: publish local parameter via this socket */
 extern int libio_bind_net(const char *uri);
 

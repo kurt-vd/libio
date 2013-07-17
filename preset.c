@@ -102,21 +102,56 @@ static void free_presets(void)
 	}
 }
 
-struct iopar *mkpreset(char *str)
+const char *libio_get_preset(const char *name)
 {
-	struct lookup *lp;
+	struct lookup *ptr;
 
 	if (!s.loaded)
 		load_presets();
-	if (s.level++ > 10)
-		error(1, 0, "%s: max. nesting reached, are you looping?", __func__);
-	for (lp = s.first; lp; lp = lp->next) {
-		if (!strcmp(lp->key, str)) {
-			--s.level;
-			return create_libiopar(lp->value);
-		}
+	if (!name)
+		return NULL;
+
+	for (ptr = s.first; ptr; ptr = ptr->next) {
+		if (!strcmp(ptr->key, name))
+			return ptr->value;
+	}
+	return NULL;
+}
+
+struct iopar *mkpreset(char *str)
+{
+	const char *value;
+
+	if (!s.loaded)
+		load_presets();
+	if (++s.level > 10) {
+		--s.level;
+		error(0, 0, "%s: max. nesting reached, are you looping?", __func__);
+		return NULL;
 	}
 	--s.level;
-	error(0, 0, "preset %s not found", str);
-	return NULL;
+	value = libio_get_preset(str);
+	if (!value) {
+		error(0, 0, "preset %s not found", str);
+		return NULL;
+	}
+	return create_libiopar(libio_get_preset(str));
+}
+
+/* iterator */
+const char *libio_next_preset(const char *name)
+{
+	struct lookup *ptr;
+
+	if (!s.loaded)
+		load_presets();
+
+	if (!name)
+		return s.first ? s.first->key : NULL;
+
+	for (ptr = s.first; ptr; ptr = ptr->next) {
+		if (!strcmp(ptr->key, name))
+			break;
+	}
+	return ptr->next ? ptr->next->key : NULL;
 }
