@@ -60,6 +60,7 @@ static struct args {
 	    bluebad, main, blueled, hal,
 	    veluxhg, veluxlg;
 	int badk[NBADK], alloff, poets;
+	double hopstaan, hslapen;
 } s;
 
 static inline int btnpushed(int iopar)
@@ -99,8 +100,7 @@ static inline int lavabo_dimmed(void)
 	tm = *localtime(&now);
 	hours = tm.tm_hour + (tm.tm_min / 60) + (tm.tm_sec / 3600);
 
-	return !((hours > libio_const("opstaan")) &&
-			(hours < libio_const("inslapen")));
+	return !((hours > s.hopstaan) && (hours < s.hslapen));
 }
 
 /* output timer */
@@ -139,6 +139,9 @@ static int ha2addons(int argc, char *argv[])
 		break;
 	}
 	libio_set_trace(s.verbose);
+
+	s.hopstaan = libio_const("opstaan");
+	s.hslapen = libio_const("slapen");
 
 	s.led = create_iopar("led");
 	s.zolder = create_iopar("zolder");
