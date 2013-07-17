@@ -59,9 +59,8 @@ static void sigchld(int sig)
 	signal(sig, sigchld);
 }
 
-static void starttorun(void *dat)
+static void starttorun(char **argv)
 {
-	char **argv = dat;
 	int pid;
 
 	pid = fork();
@@ -76,7 +75,7 @@ static void starttorun(void *dat)
 
 static int haspawn(int argc, char *argv[])
 {
-	int opt, param;
+	int opt, param, ldid;
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
@@ -103,17 +102,14 @@ static int haspawn(int argc, char *argv[])
 	}
 
 	param = create_iopar(argv[optind++]);
+	ldid = new_longdet1(s.delay);
 
 	/* main ... */
 	signal(SIGCHLD, sigchld);
 	while (1) {
-		if (iopar_dirty(param)) {
-			if (get_iopar(param, 0) >= 0.5)
-				evt_add_timeout(s.delay, starttorun, argv+optind);
-			else
-				/* remove possible pending event */
-				evt_remove_timeout(starttorun, argv+optind);
-		}
+		set_longdet(ldid, get_iopar(param, 0));
+		if (longdet_edge(ldid) && (longdet_state(ldid) == s.type))
+			starttorun(argv+optind);
 
 		/* enter sleep */
 		libio_flush();
