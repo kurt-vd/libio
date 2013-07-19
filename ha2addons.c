@@ -12,6 +12,7 @@
 
 /* configs */
 #define NBADK	3
+#define NBLUE	2
 
 /* definitions */
 #define HOUR *3600
@@ -33,8 +34,8 @@ static const char help_msg[] =
 	" hal\n"
 	" veluxhg veluxlg\n"
 	"Required inputs:\n"
-	" badk badk2 badk3 ...\n"
 	" badk1 badk2 badk3 ...\n"
+	" blue1 blue2 ... \n"
 	" alloff\n"
 	" poets\n"
 	"Used consts:\n"
@@ -64,7 +65,7 @@ static struct args {
 	int led, zolder, fan, lavabo, bad,
 	    bluebad, main, blueled, hal,
 	    veluxhg, veluxlg;
-	int badk[NBADK], alloff, poets;
+	int badk[NBADK], blue[NBLUE], alloff, poets;
 	double hopstaan, hslapen;
 	double lednight;
 } s;
@@ -165,6 +166,8 @@ static int ha2addons(int argc, char *argv[])
 	s.badk[0] = create_iopar("badk1");
 	s.badk[1] = create_iopar("badk2");
 	s.badk[2] = create_iopar("badk3");
+	s.blue[0] = create_iopar("blue1");
+	s.blue[1] = create_iopar("blue2");
 	s.alloff = create_iopar("alloff");
 	s.poets = create_iopar("poets");
 
@@ -197,6 +200,18 @@ static int ha2addons(int argc, char *argv[])
 				set_iopar(s.lavabo, 0);
 			}
 		}
+
+		/* blue lights */
+		if (btnspushed(s.blue, NBLUE)) {
+			if (get_iopar(s.bluebad) > 0.5) {
+				set_iopar(s.bluebad, 0);
+				set_iopar(s.blueled, 0);
+			} else {
+				set_iopar(s.bluebad, 1);
+				set_iopar(s.blueled, 1);
+			}
+		}
+
 		/* all off */
 		if (btnpushed(s.alloff)) {
 			set_iopar(s.led, 0);
