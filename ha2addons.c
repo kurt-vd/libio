@@ -87,15 +87,16 @@ static inline int btnspushed(const int *iopars, int niopars)
 	return 0;
 }
 
-static inline int btnsdown(const int *iopars, int niopars)
+static inline void set_longdet_btns(int longdet, const int *iopars, int niopars)
 {
 	int j;
 
 	for (j = 0; j < niopars; ++j) {
-		if (get_iopar(iopars[j]) > 0.5)
-			return 1;
+		if (iopar_dirty(iopars[j])) {
+			set_longdet(longdet, get_iopar(iopars[j]));
+			break;
+		}
 	}
-	return 0;
 }
 
 static inline int lavabo_dimmed(void)
@@ -182,7 +183,7 @@ static int ha2addons(int argc, char *argv[])
 	while (1) {
 		/* special badkamer input */
 
-		set_longdet(ldbadk, btnsdown(s.badk, NBADK));
+		set_longdet_btns(ldbadk, s.badk, NBADK);
 		if (longdet_edge(ldbadk) && longdet_state(ldbadk)) {
 			int longpress = longdet_state(ldbadk) == LONGPRESS;
 
@@ -218,7 +219,7 @@ static int ha2addons(int argc, char *argv[])
 		}
 
 		/* main */
-		set_longdet(ldmain, btnsdown(s.imain, NMAIN));
+		set_longdet_btns(ldmain, s.imain, NMAIN);
 		if (longdet_edge(ldmain) && (longdet_state(ldmain) == LONGPRESS)) {
 			/* all off */
 			set_iopar(s.led, 0);
