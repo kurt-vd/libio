@@ -208,6 +208,7 @@ struct iopar *create_libiopar(const char *str)
 {
 	const char *sep, *iostr;
 	int j, len;
+	struct iopar *iopar;
 
 	sep = strchr(str, ':');
 	if (!sep)
@@ -216,9 +217,15 @@ struct iopar *create_libiopar(const char *str)
 	len = sep - str;
 	iostr = sep + 1;
 	for (j = 0; iotypes[j].prefix; ++j) {
-		if (!strncmp(iotypes[j].prefix, str, len))
-			return iotypes[j].create(strdupa(iostr));
+		if (!strncmp(iotypes[j].prefix, str, len)) {
+			iopar = iotypes[j].create(strdupa(iostr));
+			if (iopar)
+				return iopar;
+			error(0, 0, "%s %s failed", __func__, str);
+			return NULL;
+		}
 	}
+	error(0, 0, "%s type %.*s unknown", __func__, len, str);
 	return NULL;
 }
 
@@ -230,13 +237,15 @@ int create_iopar_type(const char *type, const char *spec)
 	for (j = 0; iotypes[j].prefix; ++j) {
 		if (!strcmp(iotypes[j].prefix, type)) {
 			iopar = iotypes[j].create(strdupa(spec));
-			if (!iopar)
-				break;
-			add_iopar(iopar);
-			return iopar->id;
+			if (iopar) {
+				add_iopar(iopar);
+				return iopar->id;
+			}
+			error(0, 0, "%s %s %s failed", __func__, type, spec);
+			return -1;
 		}
 	}
-	error(0, 0, "%s %s %s failed", __func__, type, spec);
+	error(0, 0, "%s type %s unknown", __func__, spec);
 	return -1;
 }
 
@@ -251,7 +260,7 @@ int create_iopar(const char *str)
 		add_iopar(iopar);
 		return iopar->id;
 	}
-	error(1, 0, "%s %s failed", __func__, str);
+	error(0, 0, "%s %s failed", __func__, str);
 	return -1;
 }
 
