@@ -39,10 +39,9 @@ static const char help_msg[] =
 	" poets\n"
 	"Used consts:\n"
 	" (longpress)\n"
-	" opstaan\n"
-	" slapen\n"
 	" opstaan	0:00:00..24:00:00\n"
 	" slapen	0:00:00..24:00:00\n"
+	" lednight	0.01..1\n"
 	;
 
 #ifdef _GNU_SOURCE
@@ -67,6 +66,7 @@ static struct args {
 	    veluxhg, veluxlg;
 	int badk[NBADK], alloff, poets;
 	double hopstaan, hslapen;
+	double lednight;
 } s;
 
 static inline int btnpushed(int iopar)
@@ -148,6 +148,7 @@ static int ha2addons(int argc, char *argv[])
 
 	s.hopstaan = libio_const("opstaan");
 	s.hslapen = libio_const("slapen");
+	s.lednight = libio_const("lednight");
 
 	s.led = create_iopar("led");
 	s.zolder = create_iopar("zolder");
@@ -179,7 +180,7 @@ static int ha2addons(int argc, char *argv[])
 
 			if (longpress || get_iopar(s.led, NAN) < 0.01) {
 				if (!longpress && lavabo_dimmed()) {
-					set_iopar(s.led, 0.025);
+					set_iopar(s.led, s.lednight);
 					set_iopar(s.lavabo, 0);
 				} else {
 					set_iopar(s.led, 1);
