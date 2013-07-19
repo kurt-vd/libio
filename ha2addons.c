@@ -37,6 +37,12 @@ static const char help_msg[] =
 	" badk badk2 badk3 ...\n"
 	" alloff\n"
 	" poets\n"
+	"Used consts:\n"
+	" (longpress)\n"
+	" opstaan\n"
+	" slapen\n"
+	" opstaan	0:00:00..24:00:00\n"
+	" slapen	0:00:00..24:00:00\n"
 	;
 
 #ifdef _GNU_SOURCE
