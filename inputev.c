@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <math.h>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -57,6 +58,7 @@ struct inputdev {
 };
 
 static struct inputdev *inputdevs;
+static double debouncetime = -1; /* init to 'uninitialized */
 
 /* list management */
 static void add_evbtn(struct evbtn *btn, struct inputdev *dev)
@@ -129,7 +131,7 @@ static void evbtn_newdata(struct evbtn *btn, const struct input_event *ev)
 {
 	if ((int)btn->iopar.value != ev->value) {
 		if (btn->flags & FL_DEBOUNCE)
-			evt_add_timeout(0.002, evbtn_debounced, btn);
+			evt_add_timeout(debouncetime, evbtn_debounced, btn);
 		else
 			iopar_set_dirty(&btn->iopar);
 	}
@@ -255,6 +257,12 @@ struct iopar *mkinputevbtn(char *str)
 			btn->flags |= 1 << flag;
 	}
 
+	/* make sure debounce time has been read */
+	if ((debouncetime < 0) && (btn->flags & FL_DEBOUNCE)) {
+		debouncetime = libio_const("debouncetime");
+		if (isnan(debouncetime))
+			debouncetime = 0.002;
+	}
 	/* TODO: test input device for type:code presence */
 
 	/* TODO: test for duplicate btns on this device */
