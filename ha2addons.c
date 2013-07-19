@@ -34,6 +34,7 @@ static const char help_msg[] =
 	" veluxhg veluxlg\n"
 	"Required inputs:\n"
 	" badk badk2 badk3 ...\n"
+	" badk1 badk2 badk3 ...\n"
 	" alloff\n"
 	" poets\n"
 	"Used consts:\n"
@@ -161,7 +162,7 @@ static int ha2addons(int argc, char *argv[])
 	s.veluxhg = create_iopar("veluxhg");
 	s.veluxlg = create_iopar("veluxlg");
 
-	s.badk[0] = create_iopar("badk");
+	s.badk[0] = create_iopar("badk1");
 	s.badk[1] = create_iopar("badk2");
 	s.badk[2] = create_iopar("badk3");
 	s.alloff = create_iopar("alloff");
