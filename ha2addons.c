@@ -13,6 +13,7 @@
 /* configs */
 #define NBADK	3
 #define NBLUE	2
+#define NMAIN	4
 
 /* definitions */
 #define HOUR *3600
@@ -36,7 +37,7 @@ static const char help_msg[] =
 	"Required inputs:\n"
 	" badk1 badk2 badk3 ...\n"
 	" blue1 blue2 ... \n"
-	" alloff\n"
+	" main1 main2 ... \n"
 	" poets\n"
 	"Used consts:\n"
 	" (longpress)\n"
@@ -65,7 +66,7 @@ static struct args {
 	int led, zolder, fan, lavabo, bad,
 	    bluebad, main, blueled, hal,
 	    veluxhg, veluxlg;
-	int badk[NBADK], blue[NBLUE], alloff, poets;
+	int badk[NBADK], blue[NBLUE], imain[NMAIN], poets;
 	double hopstaan, hslapen;
 	double lednight;
 } s;
@@ -128,7 +129,7 @@ static void schedule_output_reset_timer(int iopar, double timeout)
 static int ha2addons(int argc, char *argv[])
 {
 	int opt;
-	int ldbadk;
+	int ldbadk, ldmain;
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
@@ -168,10 +169,14 @@ static int ha2addons(int argc, char *argv[])
 	s.badk[2] = create_iopar("badk3");
 	s.blue[0] = create_iopar("blue1");
 	s.blue[1] = create_iopar("blue2");
-	s.alloff = create_iopar("alloff");
+	s.imain[0] = create_iopar("main1");
+	s.imain[1] = create_iopar("main2");
+	s.imain[2] = create_iopar("main3");
+	s.imain[3] = create_iopar("main4");
 	s.poets = create_iopar("poets");
 
 	ldbadk = new_longdet();
+	ldmain = new_longdet();
 
 	/* main ... */
 	while (1) {
@@ -212,8 +217,10 @@ static int ha2addons(int argc, char *argv[])
 			}
 		}
 
-		/* all off */
-		if (btnpushed(s.alloff)) {
+		/* main */
+		set_longdet(ldmain, btnsdown(s.imain, NMAIN));
+		if (longdet_edge(ldmain) && (longdet_state(ldmain) == LONGPRESS)) {
+			/* all off */
 			set_iopar(s.led, 0);
 			set_iopar(s.zolder, 0);
 			set_iopar(s.fan, 0);
@@ -223,6 +230,9 @@ static int ha2addons(int argc, char *argv[])
 			set_iopar(s.main, 0);
 			set_iopar(s.blueled, 0);
 			set_iopar(s.hal, 0);
+		} else if (longdet_edge(ldmain) && (longdet_state(ldmain) == SHORTPRESS)) {
+			/* toggle */
+			set_iopar(s.main, (get_iopar(s.main) > 0.5) ? 0 : 1);
 		}
 
 		if (btnpushed(s.poets)) {
