@@ -41,7 +41,7 @@ static const struct option long_opts[] = {
 	getopt((argc), (argv), (optstring))
 #endif
 
-static const char optstring[] = "+?Vvd:s:";
+static const char optstring[] = "+?Vvsd:";
 
 static struct args {
 	int verbose;
