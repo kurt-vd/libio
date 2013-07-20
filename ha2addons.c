@@ -178,8 +178,13 @@ static int ha2addons(int argc, char *argv[])
 		if (longdet_edge(ldbadk) && longdet_state(ldbadk)) {
 			int longpress = longdet_state(ldbadk) == LONGPRESS;
 
-			if (longpress || get_iopar(s.led) < 0.01) {
-				if (!longpress && lavabo_dimmed()) {
+			if (longpress) {
+				/* force on */
+				set_iopar(s.led, 1);
+				set_iopar(s.lavabo, 1);
+			} else if (get_iopar(s.led) < 0.01) {
+				/* turn on */
+				if (lavabo_dimmed()) {
 					set_iopar(s.led, s.lednight);
 					set_iopar(s.lavabo, 0);
 				} else {
@@ -187,6 +192,7 @@ static int ha2addons(int argc, char *argv[])
 					set_iopar(s.lavabo, 1);
 				}
 			} else {
+				/* turn off */
 				set_iopar(s.led, 0);
 				set_iopar(s.lavabo, 0);
 			}
