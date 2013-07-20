@@ -16,6 +16,12 @@
 static const char *const strflags[] = {
 	"delay",
 		#define ID_DELAY	0
+	"invert",
+		#define FL_INVERT	(1 << 1)
+	"edge",
+		#define ID_EDGE		2
+	"hysteresis",
+		#define ID_HYSTERESIS	3
 	NULL,
 };
 
@@ -26,6 +32,8 @@ struct sysfspar {
 
 	int flags;
 	double delay;
+	double edge;
+	double hyst;
 	char sysfs[2];
 };
 
@@ -33,6 +41,7 @@ static void sysfspar_read(struct sysfspar *sp, int warn)
 {
 	int fd, ret;
 	long ivalue;
+	double fvalue;
 	char buf[32];
 
 	/* warn if requested, or param is present */
@@ -56,9 +65,28 @@ static void sysfspar_read(struct sysfspar *sp, int warn)
 	buf[ret] = 0;
 
 	ivalue = strtoul(buf, NULL, 10);
+	fvalue = ivalue / 1e3;
+	if (!isnan(sp->edge)) {
+		/* boolean detection */
+		if (!isnan(sp->hyst)) {
+			/* schmitt trigger */
+			if (fvalue > sp->edge + sp->hyst)
+				ivalue = 1;
+			else if (fvalue < sp->edge - sp->hyst)
+				ivalue = 0;
+			else
+				/* remain the same */
+				return;
+		} else {
+			ivalue = fvalue >= sp->edge;
+		}
+		if (sp->flags & FL_INVERT)
+			ivalue = !ivalue;
+		fvalue = ivalue;
+	}
 	if (!(sp->iopar.state & ST_PRESENT) || (ivalue != sp->lastval)) {
 		sp->lastval = ivalue;
-		sp->iopar.value = ivalue / 1e3;
+		sp->iopar.value = fvalue;
 		iopar_set_dirty(&sp->iopar);
 	}
 	/* mark as present */
@@ -135,6 +163,8 @@ struct iopar *mksysfspar(char *spec)
 	sp->iopar.set = set_sysfspar;
 	/* force the first read to mark value as dirty */
 	strcpy(sp->sysfs, strtok(spec, ","));
+	sp->edge = NAN;
+	sp->hyst = NAN;
 	sp->delay = 1;
 
 	while (1) {
@@ -147,6 +177,12 @@ struct iopar *mksysfspar(char *spec)
 		switch (flag) {
 		case ID_DELAY:
 			sp->delay = strtod(mygetsuboptvalue() ?: "1", NULL);
+			break;
+		case ID_HYSTERESIS:
+			sp->hyst = strtod(mygetsuboptvalue() ?: "0", NULL);
+			break;
+		case ID_EDGE:
+			sp->edge = strtod(mygetsuboptvalue() ?: "0", NULL);
 			break;
 		default:
 			sp->flags |= 1 << flag;
