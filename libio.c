@@ -328,7 +328,7 @@ int iopar_dirty(int iopar_id)
 
 	if (!iopar) {
 		errno = ENODEV;
-		return -1;
+		return 0;
 	}
 	return (iopar->state & ST_DIRTY) ? 1 : 0;
 }
