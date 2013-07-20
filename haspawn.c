@@ -21,6 +21,7 @@ static const char help_msg[] =
 	" -V, --version		Show version\n"
 	" -v, --verbose		Be more verbose\n"
 
+	" -i, --immediate	Trigger immediately (like btndown)\n"
 	" -s, --short		Trigger on short press\n"
 	" -d, --delay=SECS	detect long press\n"
 	;
@@ -31,6 +32,7 @@ static const struct option long_opts[] = {
 	{ "version", no_argument, NULL, 'V', },
 	{ "verbose", no_argument, NULL, 'v', },
 
+	{ "immediate", no_argument, NULL, 'i', },
 	{ "short", no_argument, NULL, 's', },
 	{ "delay", required_argument, NULL, 'd', },
 	{ },
@@ -41,7 +43,7 @@ static const struct option long_opts[] = {
 	getopt((argc), (argv), (optstring))
 #endif
 
-static const char optstring[] = "+?Vvsd:";
+static const char optstring[] = "+?Vvisd:";
 
 static struct args {
 	int verbose;
@@ -89,6 +91,9 @@ static int haspawn(int argc, char *argv[])
 	case 'v':
 		++s.verbose;
 		break;
+	case 'i':
+		s.type = 0;
+		break;
 	case 's':
 		s.type = SHORTPRESS;
 		break;
@@ -109,13 +114,17 @@ static int haspawn(int argc, char *argv[])
 	}
 
 	param = create_iopar(argv[optind++]);
-	ldid = new_longdet1(s.delay);
+	if (s.type)
+		ldid = new_longdet1(s.delay);
 
 	/* main ... */
 	signal(SIGCHLD, sigchld);
 	while (1) {
-		set_longdet(ldid, get_iopar(param));
-		if (longdet_edge(ldid) && (longdet_state(ldid) == s.type))
+		if (s.type) {
+			set_longdet(ldid, get_iopar(param));
+			if (longdet_edge(ldid) && (longdet_state(ldid) == s.type))
+				starttorun(argv+optind);
+		} else if (iopar_dirty(param) && (get_iopar(param) > 0.5))
 			starttorun(argv+optind);
 
 		/* enter sleep */
