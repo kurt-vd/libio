@@ -61,6 +61,11 @@ extern const char *libio_next_const(const char *name);
 /* netio: publish local parameter via this socket */
 extern int libio_bind_net(const char *uri);
 
+/* netio messages */
+extern int netio_send_msg(const char *uri, const char *signal);
+extern int netio_msg_pending(void);
+extern const char *netio_recv_msg(void);
+
 /* long-press-detection */
 extern int new_longdet(void); /* default delay */
 extern int new_longdet1(double delay);

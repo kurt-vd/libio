@@ -66,6 +66,13 @@ struct iosocket {
 		#define FL_MYPUBLIC_SOCK	0x01
 };
 
+struct netiomsg {
+	struct netiomsg *next;
+	union sockaddrs name;
+	socklen_t namelen;
+	char txt[2];
+};
+
 #define NETIO_MTU	1500
 #define NETIO_PINGTIME	1
 
@@ -74,6 +81,9 @@ static struct iosocket *iosockets[PF_MAX];
 static struct iosocket *pubsockets[PF_MAX];
 static int netio_dirty;
 static struct sockparam *localparams;
+/* netiomsg queue (first & last) */
+static struct netiomsg *netiomsgq, *netiomsgqlast;
+static struct netiomsg *netiomsgp;
 
 /* locally used buffer */
 static char pktbuf[NETIO_MTU+1];
@@ -336,6 +346,21 @@ static void read_iosocket(int fd, void *data)
 				remote->flags |= FL_SENDTO;
 			}
 			continue;
+		} else if (*tok == '!') {
+			struct netiomsg *msg;
+
+			/* fill new netiomsg */
+			msg = zalloc(sizeof(*msg) + strlen(tok));
+			msg->name = name;
+			msg->namelen = namelen;
+			strcpy(msg->txt, tok+1);
+
+			/* queue netiomsg */
+			if (netiomsgqlast)
+				netiomsgqlast->next = msg;
+			else
+				netiomsgq = msg;
+			netiomsgqlast = msg;
 		}
 		dat = strpbrk(tok, "=>");
 		if (!dat)
@@ -628,6 +653,9 @@ void netio_sync(void)
 	struct sockparam *par;
 	int len, j;
 
+	/* flush netiomsg queue */
+	while (netio_recv_msg()) ;
+
 	if (!netio_dirty)
 		return;
 	/* prepare local parameters update packet */
@@ -674,4 +702,69 @@ void netio_sync(void)
 		}
 	}
 	netio_dirty = 0;
+}
+
+/* netio messages */
+int netio_send_msg(const char *uri, const char *msg)
+{
+	union sockaddrs name;
+	int namelen, family = 0;
+	char *pkt;
+
+	do {
+		if (!uri)
+			return -1;
+		if (!strncmp(uri, "unix:", 5)) {
+			family = AF_UNIX;
+			uri += 5;
+		} else if (!strncmp(uri, "udp6:", 5)) {
+			family = AF_INET6;
+			uri += 5;
+		} else if (!strncmp(uri, "udp4:", 5)) {
+			family = AF_INET;
+			uri += 5;
+		} else if (!strncmp(uri, "udp:", 5)) {
+			family = AF_INET;
+			uri += 4;
+		} else
+			/* find uri through iopar preset */
+			uri = libio_get_preset(uri);
+	} while (!family);
+
+	/* autobind client socket */
+	if (!iosockets[family] && (netio_autobind(family) < 0))
+		goto fail_family;
+
+	/* don't create a remote, just find a peername for use in sendto */
+	namelen = str_to_sockname(uri, &name.sa, family);
+	if (namelen < 0)
+		goto fail_sock;
+
+	pkt = alloca(strlen(msg ?: "") + 2);
+	sprintf(pkt, "!%s", msg);
+	return sendto(iosockets[family]->fd, pkt, strlen(pkt), 0, &name.sa, namelen);
+
+fail_sock:
+fail_family:
+	return -1;
+}
+
+int netio_msg_pending(void)
+{
+	return netiomsgq ? 1 : 0;
+}
+
+const char *netio_recv_msg(void)
+{
+	if (netiomsgp)
+		free(netiomsgp);
+	/* shift queue */
+	netiomsgp = netiomsgq;
+	if (netiomsgq) {
+		netiomsgq = netiomsgq->next;
+		if (!netiomsgq)
+			netiomsgqlast = NULL;
+	}
+	netiomsgp->next = NULL;
+	return netiomsgp->txt;
 }
