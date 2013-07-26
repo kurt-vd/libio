@@ -71,6 +71,9 @@ static struct args {
 	int badk[NBADK], blue[NBLUE], imain[NMAIN], poets;
 	double hopstaan, hslapen;
 	double lednight;
+
+	/* state */
+	int force_dim;
 } s;
 
 static inline int btnpushed(int iopar)
@@ -107,6 +110,8 @@ static inline int lavabo_dimmed(void)
 	struct tm tm;
 	double hours;
 
+	if (s.force_dim)
+		return (s.force_dim < 0) ? 0 : 1;
 	time(&now);
 	tm = *localtime(&now);
 	hours = tm.tm_hour + (tm.tm_min / 60) + (tm.tm_sec / 3600);
@@ -195,6 +200,13 @@ static int ha2addons(int argc, char *argv[])
 		while (netio_msg_pending()) {
 			const char *msg = netio_recv_msg();
 
+			if (!strcmp(msg, "dim"))
+				s.force_dim = 1;
+			else if (!strcmp(msg, "bright"))
+				s.force_dim = -1;
+			else if (!strcmp(msg, "normal")) {
+				s.force_dim = 0;
+			}
 		}
 		/* special badkamer input */
 
