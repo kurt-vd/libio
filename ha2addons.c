@@ -12,7 +12,7 @@
 
 /* configs */
 #define NBADK	4
-#define NBLUE	2
+#define NBLUE	4
 #define NMAIN	4
 
 /* definitions */
@@ -171,6 +171,8 @@ static int ha2addons(int argc, char *argv[])
 	s.badk[3] = create_iopar("badk4");
 	s.blue[0] = create_iopar("blue1");
 	s.blue[1] = create_iopar("blue2");
+	s.blue[2] = create_iopar("blue3");
+	s.blue[3] = create_iopar("blue4");
 	s.imain[0] = create_iopar("main1");
 	s.imain[1] = create_iopar("main2");
 	s.imain[2] = create_iopar("main3");
