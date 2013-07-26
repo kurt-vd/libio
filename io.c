@@ -59,8 +59,12 @@ int main(int argc, char *argv[])
 		++argv;
 		--argc;
 	}
-	if (applet)
+	if (applet) {
+#if 0
+		program_invocation_name = applet->name;
+#endif
 		return applet->fn(argc, argv);
+	}
 
 	fprintf(stderr, "Available applets:\n");
 	for (j = 0; j < napplets; ++j)
