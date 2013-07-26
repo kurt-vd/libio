@@ -26,6 +26,7 @@ static const char help_msg[] =
 	"Options:\n"
 	" -V, --version		Show version\n"
 	" -v, --verbose		Be more verbose\n"
+	" -l, --listen=SPEC	Listen on SPEC\n"
 	"Required preset parameters:\n"
 	" led\n"
 	" zolder\n"
@@ -51,6 +52,7 @@ static const struct option long_opts[] = {
 	{ "help", no_argument, NULL, '?', },
 	{ "version", no_argument, NULL, 'V', },
 	{ "verbose", no_argument, NULL, 'v', },
+	{ "listen", required_argument, NULL, 'l', },
 	{ },
 };
 
@@ -59,7 +61,7 @@ static const struct option long_opts[] = {
 	getopt((argc), (argv), (optstring))
 #endif
 
-static const char optstring[] = "?Vv";
+static const char optstring[] = "?Vvl:";
 
 static struct args {
 	int verbose;
@@ -140,6 +142,10 @@ static int ha2addons(int argc, char *argv[])
 	case 'v':
 		++s.verbose;
 		break;
+	case 'l':
+		if (libio_bind_net(optarg) < 0)
+			error(1, 0, "bind %s failed", optarg);
+		break;
 
 	case '?':
 	default:
@@ -185,6 +191,11 @@ static int ha2addons(int argc, char *argv[])
 
 	/* main ... */
 	while (1) {
+		/* netio msgs */
+		while (netio_msg_pending()) {
+			const char *msg = netio_recv_msg();
+
+		}
 		/* special badkamer input */
 
 		set_longdet_btns(ldbadk, s.badk, NBADK);
