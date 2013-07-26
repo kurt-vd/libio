@@ -39,9 +39,19 @@ static int libio_consts(int argc, char *argv[])
 	return 0;
 }
 
+static int netio_sendto(int argc, char *argv[])
+{
+	if (argc < 3) {
+		fprintf(stderr, "usage: %s SOCKET MESSAGE\n", argv[0]);
+		exit(1);
+	}
+	return netio_send_msg(argv[1], argv[2]);
+}
+
 __attribute__((constructor))
 static void add_default_applets(void)
 {
 	register_applet("presets", libio_presets);
 	register_applet("consts", libio_consts);
+	register_applet("sendto", netio_sendto);
 }
