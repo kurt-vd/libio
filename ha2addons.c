@@ -11,7 +11,7 @@
 #include "_libio.h"
 
 /* configs */
-#define NBADK	3
+#define NBADK	4
 #define NBLUE	2
 #define NMAIN	4
 
@@ -168,6 +168,7 @@ static int ha2addons(int argc, char *argv[])
 	s.badk[0] = create_iopar("badk1");
 	s.badk[1] = create_iopar("badk2");
 	s.badk[2] = create_iopar("badk3");
+	s.badk[3] = create_iopar("badk4");
 	s.blue[0] = create_iopar("blue1");
 	s.blue[1] = create_iopar("blue2");
 	s.imain[0] = create_iopar("main1");
