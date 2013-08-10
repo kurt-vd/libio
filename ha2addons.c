@@ -217,6 +217,8 @@ static int ha2addons(int argc, char *argv[])
 			if (get_iopar(s.bluebad) > 0.5) {
 				set_iopar(s.bluebad, 0);
 				set_iopar(s.blueled, 0);
+			} else if (get_iopar(s.blueled) < 0.5 && lavabo_dimmed()) {
+				set_iopar(s.blueled, 1);
 			} else {
 				set_iopar(s.bluebad, 1);
 				set_iopar(s.blueled, 1);
