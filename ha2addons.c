@@ -130,7 +130,7 @@ static void schedule_output_reset_timer(int iopar, double timeout)
 static int ha2addons(int argc, char *argv[])
 {
 	int opt;
-	int ldbadk, ldmain;
+	int ldbadk, ldmain, ldblue;
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
@@ -181,6 +181,7 @@ static int ha2addons(int argc, char *argv[])
 
 	ldbadk = new_longdet();
 	ldmain = new_longdet();
+	ldblue = new_longdet();
 
 	/* main ... */
 	while (1) {
@@ -211,7 +212,8 @@ static int ha2addons(int argc, char *argv[])
 		}
 
 		/* blue lights */
-		if (btnspushed(s.blue, NBLUE)) {
+		set_longdet_btns(ldblue, s.blue, NBLUE);
+		if (longdet_edge(ldblue) && longdet_state(ldblue) == SHORTPRESS) {
 			if (get_iopar(s.bluebad) > 0.5) {
 				set_iopar(s.bluebad, 0);
 				set_iopar(s.blueled, 0);
@@ -219,6 +221,9 @@ static int ha2addons(int argc, char *argv[])
 				set_iopar(s.bluebad, 1);
 				set_iopar(s.blueled, 1);
 			}
+		} else if (longdet_edge(ldblue) && longdet_state(ldblue) == LONGPRESS) {
+			set_iopar(s.bluebad, 1);
+			set_iopar(s.blueled, 1);
 		}
 
 		/* main */
