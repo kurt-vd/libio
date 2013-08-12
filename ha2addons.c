@@ -195,19 +195,17 @@ static int ha2addons(int argc, char *argv[])
 				/* force on */
 				set_iopar(s.led, 1);
 				set_iopar(s.lavabo, 1);
-			} else if (get_iopar(s.led) < 0.01) {
-				/* turn on */
-				if (lavabo_dimmed()) {
-					set_iopar(s.led, s.lednight);
-					set_iopar(s.lavabo, 0);
-				} else {
-					set_iopar(s.led, 1);
-					set_iopar(s.lavabo, 1);
-				}
-			} else {
+			} else if (get_iopar(s.led) > 0.01) {
 				/* turn off */
 				set_iopar(s.led, 0);
 				set_iopar(s.lavabo, 0);
+			} else if (lavabo_dimmed()) {
+				/* turn on dimmed */
+				set_iopar(s.led, s.lednight);
+			} else {
+				/* turn on 100% */
+				set_iopar(s.led, 1);
+				set_iopar(s.lavabo, 1);
 			}
 		}
 
