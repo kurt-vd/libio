@@ -213,19 +213,19 @@ static int ha2addons(int argc, char *argv[])
 
 		/* blue lights */
 		set_longdet_btns(ldblue, s.blue, NBLUE);
-		if (longdet_edge(ldblue) && longdet_state(ldblue) == SHORTPRESS) {
-			if (get_iopar(s.bluebad) > 0.5) {
+		if (longdet_edge(ldblue) && longdet_state(ldblue)) {
+			if (longdet_state(ldblue) == LONGPRESS) {
+				set_iopar(s.bluebad, 1);
+				set_iopar(s.blueled, 1);
+			} else if (get_iopar(s.blueled) > 0.5) {
 				set_iopar(s.bluebad, 0);
 				set_iopar(s.blueled, 0);
-			} else if (get_iopar(s.blueled) < 0.5 && lavabo_dimmed()) {
+			} else if (lavabo_dimmed()) {
 				set_iopar(s.blueled, 1);
 			} else {
 				set_iopar(s.bluebad, 1);
 				set_iopar(s.blueled, 1);
 			}
-		} else if (longdet_edge(ldblue) && longdet_state(ldblue) == LONGPRESS) {
-			set_iopar(s.bluebad, 1);
-			set_iopar(s.blueled, 1);
 		}
 
 		/* main */
