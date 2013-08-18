@@ -212,9 +212,7 @@ static int ha2addons(int argc, char *argv[])
 
 		set_longdet_btns(ldbadk, s.badk, NBADK);
 		if (longdet_edge(ldbadk) && longdet_state(ldbadk)) {
-			int longpress = longdet_state(ldbadk) == LONGPRESS;
-
-			if (longpress) {
+			if (longdet_state(ldbadk) == LONGPRESS) {
 				/* force on */
 				set_iopar(s.led, 1);
 				set_iopar(s.lavabo, 1);
