@@ -760,11 +760,14 @@ const char *netio_recv_msg(void)
 		free(netiomsgp);
 	/* shift queue */
 	netiomsgp = netiomsgq;
-	if (netiomsgq) {
-		netiomsgq = netiomsgq->next;
-		if (!netiomsgq)
-			netiomsgqlast = NULL;
-	}
+	if (!netiomsgp)
+		return NULL;
+
+	netiomsgq = netiomsgq->next;
+	if (!netiomsgq)
+		netiomsgqlast = NULL;
+
+	/* unlink current entry */
 	netiomsgp->next = NULL;
 	return netiomsgp->txt;
 }
