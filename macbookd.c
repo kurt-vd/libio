@@ -99,7 +99,7 @@ static int macbookd(int argc, char *argv[])
 
 	case 'l':
 		if (libio_bind_net(optarg) < 0)
-			error(1, 0, "bind %s failed", optarg);
+			elog(LOG_CRIT, 0, "bind %s failed", optarg);
 		++nsocks;
 		break;
 	case '?':
@@ -111,7 +111,7 @@ static int macbookd(int argc, char *argv[])
 	if (!nsocks) {
 		const char uri[] = "unix:@macbookd";
 		if (libio_bind_net(uri) < 0)
-			error(1, 0, "bind %s failed", uri);
+			elog(LOG_CRIT, 0, "bind %s failed", uri);
 	}
 	libio_set_trace(s.verbose);
 
@@ -141,7 +141,7 @@ static int macbookd(int argc, char *argv[])
 			newvalue = fit_float(newvalue, 0, 0.5) +
 				get_iopar(okbd);
 			if (set_iopar(kbd, newvalue) < 0)
-				error(1, errno, "%.3lf > %s", newvalue, s.kbd);
+				elog(LOG_WARNING, errno, "%.3lf > %s", newvalue, s.kbd);
 			set_iopar(nkbd, newvalue);
 			++changed;
 		}
@@ -152,13 +152,13 @@ static int macbookd(int argc, char *argv[])
 			newvalue = fit_float(newvalue, 0.05, 1) +
 				get_iopar(obl);
 			if (set_iopar(bl, newvalue) < 0)
-				error(1, errno, "%.3lf > %s", newvalue, s.bl);
+				elog(LOG_WARNING, errno, "%.3lf > %s", newvalue, s.bl);
 			set_iopar(nbl, newvalue);
 			++changed;
 		}
 
-		if (s.verbose && changed)
-			error(0, 0, "light %.3lf kbd %.3lf bl %.3lf",
+		if (changed)
+			elog(LOG_INFO, 0, "light %.3lf kbd %.3lf bl %.3lf",
 					get_iopar(light),
 					get_iopar(kbd),
 					get_iopar(bl));
@@ -168,7 +168,7 @@ static int macbookd(int argc, char *argv[])
 		if (evt_loop(-1) < 0) {
 			if (errno == EINTR)
 				continue;
-			error(0, errno, "evt_loop");
+			elog(LOG_ERR, errno, "evt_loop");
 			break;
 		}
 	}

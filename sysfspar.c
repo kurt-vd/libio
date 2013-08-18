@@ -51,14 +51,14 @@ static void sysfspar_read(struct sysfspar *sp, int warn)
 	if (fd < 0) {
 		/* avoid alerting too much */
 		if (warn)
-			error(0, errno, "open %s", sp->sysfs);
+			elog(LOG_WARNING, errno, "open %s", sp->sysfs);
 		goto fail_open;
 	}
 	ret = read(fd, buf, sizeof(buf)-1);
 	if (ret < 0) {
 		/* avoid alerting too much */
 		if (warn)
-			error(0, errno, "read %s", sp->sysfs);
+			elog(LOG_WARNING, errno, "read %s", sp->sysfs);
 		goto fail_read;
 	}
 	close(fd);
@@ -119,7 +119,7 @@ static int set_sysfspar(struct iopar *iopar, double value)
 	fp = fopen(sp->sysfs, "w");
 	if (!fp) {
 		if (sp->iopar.state & ST_PRESENT)
-			error(0, errno, "fopen %s", sp->sysfs);
+			elog(LOG_WARNING, errno, "fopen %s", sp->sysfs);
 		goto fail_open;
 	}
 
@@ -127,7 +127,7 @@ static int set_sysfspar(struct iopar *iopar, double value)
 	ret = fprintf(fp, "%lu", ivalue);
 	if (ret < 0) {
 		if (sp->iopar.state & ST_PRESENT)
-			error(0, errno, "fwrite %s", sp->sysfs);
+			elog(LOG_WARNING, errno, "fwrite %s", sp->sysfs);
 		goto fail_write;
 	}
 	fclose(fp);
@@ -173,7 +173,7 @@ struct iopar *mksysfspar(char *spec)
 			break;
 		flag = strlookup(tok, strflags);
 		if (flag < 0)
-			error(1, 0, "flag %s unknown", tok);
+			elog(LOG_CRIT, 0, "flag %s unknown", tok);
 		switch (flag) {
 		case ID_DELAY:
 			sp->delay = strtod(mygetsuboptvalue() ?: "1", NULL);

@@ -34,7 +34,7 @@ static void load_presets_file(const char *file)
 	fp = fopen(file, "r");
 	if (!fp) {
 		if (errno != ENOENT)
-			error(0, errno, "open %s", file);
+			elog(LOG_WARNING, errno, "open %s", file);
 		return;
 	}
 	while (!feof(fp)) {
@@ -53,7 +53,7 @@ static void load_presets_file(const char *file)
 		key = strtok(line, "\t ");
 		value = strtok(NULL, "\t ");
 		if (!key || !value) {
-			error(0, 0, "bad line %s:%i", file, linenr);
+			elog(LOG_WARNING, 0, "bad line %s:%i", file, linenr);
 			continue;
 		}
 		if (!strcmp(key, "include")) {
@@ -126,13 +126,13 @@ struct iopar *mkpreset(char *str)
 		load_presets();
 	if (++s.level > 10) {
 		--s.level;
-		error(0, 0, "%s: max. nesting reached, are you looping?", __func__);
+		elog(LOG_NOTICE, 0, "%s: max. nesting reached, are you looping?", __func__);
 		return NULL;
 	}
 	--s.level;
 	value = libio_get_preset(str);
 	if (!value) {
-		error(0, 0, "preset %s not found", str);
+		elog(LOG_NOTICE, 0, "preset %s not found", str);
 		return NULL;
 	}
 	return create_libiopar(libio_get_preset(str));

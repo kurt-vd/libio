@@ -10,13 +10,33 @@
 
 #include "_libio.h"
 
+void elog(int prio, int errnum, const char *fmt, ...)
+{
+	char *str;
+	va_list va;
+
+	va_start(va, fmt);
+	vasprintf(&str, fmt, va);
+	va_end(va);
+	if (errnum) {
+		char *tmp = str;
+
+		asprintf(&str, "%s: %s", tmp, strerror(errnum));
+		free(tmp);
+	}
+	syslog(prio, "%s\n", str);
+	free(str);
+	if (prio <= LOG_CRIT)
+		exit(1);
+}
+
 void *zalloc(unsigned int size)
 {
 	void *ptr;
 
 	ptr = malloc(size);
 	if (!ptr)
-		error(1, errno, "malloc %u", size);
+		elog(LOG_CRIT, errno, "malloc %u", size);
 	memset(ptr, 0, size);
 	return ptr;
 }
@@ -31,7 +51,7 @@ int strlookup(const char *str, const char *const table[])
 	for (j = 0; *table; ++j, ++table) {
 		if (!strncasecmp(str, *table, len)) {
 			if (result >= 0) {
-				error(0, 0, "%s %s: not unique",
+				elog(LOG_NOTICE, 0, "%s %s: not unique",
 						__func__, str);
 				return -1;
 			}
@@ -81,7 +101,7 @@ int attr_read(int default_value, const char *fmt, ...)
 		fscanf(fp, "%i", &value);
 		fclose(fp);
 	} else {
-		error(0, errno, "fopen %s r", file);
+		elog(LOG_WARNING, errno, "fopen %s r", file);
 		value = default_value;
 	}
 	free(file);
@@ -104,7 +124,7 @@ int attr_write(int value, const char *fmt, ...)
 		ret = fprintf(fp, "%i\n", value);
 		fclose(fp);
 	} else {
-		error(0, errno, "fopen %s w", file);
+		elog(LOG_WARNING, errno, "fopen %s w", file);
 		ret = -1;
 	}
 	free(file);
@@ -128,7 +148,7 @@ int schedule_itimer(double v)
 
 	ret = setitimer(ITIMER_REAL, &it, 0);
 	if (ret)
-		error(0, errno, "setitimer(%.3lf)", v);
+		elog(LOG_WARNING, errno, "setitimer(%.3lf)", v);
 	return ret;
 }
 
@@ -195,7 +215,7 @@ static void add_iopar(struct iopar *iopar)
 	tablesize += 16;
 	table = realloc(table, sizeof(*table)*tablesize);
 	if (!table)
-		error(1, errno, "realloc");
+		elog(LOG_CRIT, errno, "realloc");
 	memset(table + oldtablesize, 0,
 			sizeof(*table)*(tablesize - oldtablesize));
 empty_spot:
@@ -221,11 +241,11 @@ struct iopar *create_libiopar(const char *str)
 			iopar = iotypes[j].create(strdupa(iostr));
 			if (iopar)
 				return iopar;
-			error(0, 0, "%s %s failed", __func__, str);
+			elog(LOG_NOTICE, 0, "%s %s failed", __func__, str);
 			return NULL;
 		}
 	}
-	error(0, 0, "%s type %.*s unknown", __func__, len, str);
+	elog(LOG_NOTICE, 0, "%s type %.*s unknown", __func__, len, str);
 	return NULL;
 }
 
@@ -241,11 +261,11 @@ int create_iopar_type(const char *type, const char *spec)
 				add_iopar(iopar);
 				return iopar->id;
 			}
-			error(0, 0, "%s %s %s failed", __func__, type, spec);
+			elog(LOG_NOTICE, 0, "%s %s %s failed", __func__, type, spec);
 			return -1;
 		}
 	}
-	error(0, 0, "%s type %s unknown", __func__, spec);
+	elog(LOG_NOTICE, 0, "%s type %s unknown", __func__, spec);
 	return -1;
 }
 
@@ -260,7 +280,7 @@ int create_iopar(const char *str)
 		add_iopar(iopar);
 		return iopar->id;
 	}
-	error(0, 0, "%s %s failed", __func__, str);
+	elog(LOG_NOTICE, 0, "%s %s failed", __func__, str);
 	return -1;
 }
 

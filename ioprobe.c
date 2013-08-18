@@ -113,7 +113,7 @@ static int ioprobe(int argc, char *argv[])
 				modvalue = value+modvalue;
 			case 's':
 				if (set_iopar(param, modvalue) < 0)
-					error(1, errno, "set output");
+					elog(LOG_CRIT, errno, "set output");
 				actionchar = 'w';
 				break;
 			}
@@ -130,7 +130,7 @@ static int ioprobe(int argc, char *argv[])
 		if (evt_loop(-1) < 0) {
 			if (errno == EINTR)
 				continue;
-			error(0, errno, "evt_loop");
+			elog(LOG_ERR, errno, "evt_loop");
 			break;
 		}
 	}

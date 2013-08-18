@@ -31,13 +31,13 @@ static int led_set(struct iopar *iopar, double value)
 	fp = fopen(led->sysfs, "w");
 	if (!fp) {
 		if (led->iopar.state & ST_PRESENT)
-			error(0, errno, "fopen %s", led->sysfs);
+			elog(LOG_WARNING, errno, "fopen %s", led->sysfs);
 		goto fail_open;
 	}
 	ret = fprintf(fp, "%u", fit_int(value*led->max, 0, led->max));
 	if (ret < 0) {
 		if (led->iopar.state & ST_PRESENT)
-			error(0, errno, "fwrite %s", led->sysfs);
+			elog(LOG_WARNING, errno, "fwrite %s", led->sysfs);
 		goto fail_write;
 	}
 	fclose(fp);

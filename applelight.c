@@ -30,14 +30,14 @@ static void applelight_read(struct applelight *al, int warn)
 	if (fd < 0) {
 		/* avoid alerting too much */
 		if (warn)
-			error(0, errno, "open %s", al->sysfs);
+			elog(LOG_ERR, errno, "open %s", al->sysfs);
 		goto fail_open;
 	}
 	ret = read(fd, buf, sizeof(buf)-1);
 	if (ret < 0) {
 		/* avoid alerting too much */
 		if (warn)
-			error(0, errno, "read %s", al->sysfs);
+			elog(LOG_ERR, errno, "read %s", al->sysfs);
 		goto fail_read;
 	}
 	close(fd);

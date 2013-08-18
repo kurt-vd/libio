@@ -344,14 +344,14 @@ struct iopar *mkmotordir(char *str)
 	case 0:
 		mot->type = lookup_motor_type(tok);
 		if (mot->type < 0) {
-			error(0, 0, "%s: bad motor type '%s'", __func__, tok);
+			elog(LOG_ERR, 0, "%s: bad motor type '%s'", __func__, tok);
 			goto fail_config;
 		}
 		break;
 	case 1:
 		mot->out1 = create_iopar(tok);
 		if (mot->out1 <= 0) {
-			error(0, 0, "%s: bad output '%s'", __func__, tok);
+			elog(LOG_ERR, 0, "%s: bad output '%s'", __func__, tok);
 			goto fail_config;
 		}
 		break;
@@ -362,7 +362,7 @@ struct iopar *mkmotordir(char *str)
 		}
 		mot->out2 = create_iopar(tok);
 		if (mot->out2 <= 0) {
-			error(0, 0, "%s: bad output '%s'", __func__, tok);
+			elog(LOG_ERR, 0, "%s: bad output '%s'", __func__, tok);
 			goto fail_config;
 		}
 		break;
@@ -373,7 +373,7 @@ struct iopar *mkmotordir(char *str)
 		break;
 	}
 	if (ntok < 4) {
-		error(0, 0, "%s: need arguments \"[MOTORTYPE(updown|godir)]+OUT1+[/]OUT2+MAXVAL\"", __func__);
+		elog(LOG_ERR, 0, "%s: need arguments \"[MOTORTYPE(updown|godir)]+OUT1+[/]OUT2+MAXVAL\"", __func__);
 		goto fail_config;
 	}
 	/* fixups */

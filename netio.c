@@ -200,7 +200,7 @@ static int str_to_sockname(const char *uri, struct sockaddr *paddr, int family)
 #endif
 		/* resolve host to IP */
 		if (getaddrinfo(luri, strport, &hints, &ai) < 0) {
-			error(0, errno, "getaddrinfo '%s'", uri);
+			elog(LOG_WARNING, errno, "getaddrinfo '%s'", uri);
 			return -1;
 		}
 
@@ -337,7 +337,7 @@ static void read_iosocket(int fd, void *data)
 			}
 			if (!strncmp(tok, "*subscribe", 8)) {
 				if (!(sk->flags & FL_MYPUBLIC_SOCK)) {
-					error(0, 0, "subscriber via client socket");
+					elog(LOG_WARNING, 0, "subscriber via client socket");
 					continue;
 				}
 				evt_add_timeout(2*NETIO_PINGTIME,
@@ -369,7 +369,7 @@ static void read_iosocket(int fd, void *data)
 		case '=':
 			/* assign for remote parameter */
 			if (sk->flags & FL_MYPUBLIC_SOCK) {
-				error(0, 0, "assign %s via server socket", tok);
+				elog(LOG_WARNING, 0, "assign %s via server socket", tok);
 				break;
 			}
 			/* assign */
@@ -386,7 +386,7 @@ static void read_iosocket(int fd, void *data)
 			break;
 		case '>':
 			if (!(sk->flags & FL_MYPUBLIC_SOCK)) {
-				error(0, 0, "write %s via client socket", tok);
+				elog(LOG_WARNING, 0, "write %s via client socket", tok);
 				break;
 			}
 			/* write request for local parameter */
@@ -396,7 +396,7 @@ static void read_iosocket(int fd, void *data)
 				break;
 			if (!(par->state & ST_WRITABLE)) {
 				/* write-protect readonly parameters */
-				error(0, 0, "remote writes %s, refused!", par->name);
+				elog(LOG_WARNING, 0, "remote writes %s, refused!", par->name);
 				break;
 			}
 			iopar_set_dirty(&par->iopar);
@@ -418,7 +418,7 @@ static void read_iosocket(int fd, void *data)
 					par->name, par->iopar.value);
 		}
 		if (sendto(fd, pktbuf, len, 0, &remote->name.sa, remote->namelen) < 0)
-			error(0, errno, "send initial packet");
+			elog(LOG_WARNING, errno, "send initial packet");
 	}
 }
 
@@ -434,7 +434,7 @@ static int netio_autobind(int family)
 
 	ret = sk = socket(family, SOCK_DGRAM/* | SOCK_CLOEXEC*/, 0);
 	if (ret < 0) {
-		error(0, errno, "socket %i dgram 0", name.sa.sa_family);
+		elog(LOG_WARNING, errno, "socket %i dgram 0", name.sa.sa_family);
 		return -1;
 	}
 	fcntl(sk, F_SETFD, fcntl(sk, F_GETFD) | FD_CLOEXEC);
@@ -443,7 +443,7 @@ static int netio_autobind(int family)
 	if (namelen > 0) {
 		ret = bind(sk, &name.sa, namelen);
 		if (ret < 0) {
-			error(0, errno, "bind '%i'", family);
+			elog(LOG_WARNING, errno, "bind '%i'", family);
 			close(sk);
 			return -1;
 		}
@@ -481,7 +481,7 @@ int libio_bind_net(const char *uri)
 
 	namestr = strchr(uri, ':');
 	if (!namestr) {
-		error(0, 0, "no family in %s", uri);
+		elog(LOG_WARNING, 0, "no family in %s", uri);
 		return -1;
 	}
 
@@ -491,12 +491,12 @@ int libio_bind_net(const char *uri)
 
 	/* test for duplicate */
 	if (pubsockets[name.sa.sa_family])
-		error(1, 0, "duplicate family socket '%s'", uri);
+		elog(LOG_CRIT, 0, "duplicate family socket '%s'", uri);
 
 	/* socket creation */
 	ret = sk = socket(name.sa.sa_family, SOCK_DGRAM/* | SOCK_CLOEXEC*/, 0);
 	if (ret < 0) {
-		error(0, errno, "socket %i dgram 0", name.sa.sa_family);
+		elog(LOG_WARNING, errno, "socket %i dgram 0", name.sa.sa_family);
 		goto fail_socket;
 	}
 	fcntl(sk, F_SETFD, fcntl(sk, F_GETFD) | FD_CLOEXEC);
@@ -505,7 +505,7 @@ int libio_bind_net(const char *uri)
 	ret = bind(sk, &name.sa, namelen);
 	umask(saved_umask);
 	if (ret < 0) {
-		error(0, errno, "bind '%s'", uri);
+		elog(LOG_WARNING, errno, "bind '%s'", uri);
 		goto fail_bind;
 	}
 
@@ -583,11 +583,11 @@ static struct iopar *mknetioremote(const char *uri, int family)
 
 	parname = strchr(uri, '#') + 1;
 	if (parname == (char *)1) {
-		error(0, 0, "no parameter name for '%s'", uri);
+		elog(LOG_WARNING, 0, "no parameter name for '%s'", uri);
 		goto fail_noname;
 	}
 	if (!iosockets[family] && (netio_autobind(family) < 0)) {
-		error(0, 0, "no socket for '%s'", uri);
+		elog(LOG_WARNING, 0, "no socket for '%s'", uri);
 		goto fail_family;
 	}
 
@@ -614,7 +614,7 @@ static struct iopar *mknetioremote(const char *uri, int family)
 		memcpy(&remote->name, &name, namelen);
 		add_ioremote(remote, sock);
 		if (sendto(sock->fd, "*subscribe\n", 10, 0, &name.sa, namelen) < 0) {
-			error(0, errno, "subscribe failed");
+			elog(LOG_WARNING, errno, "subscribe failed");
 			del_ioremote(remote);
 			free(remote);
 			goto fail_subscribe;
@@ -676,7 +676,7 @@ void netio_sync(void)
 		for (remote = pubsockets[j]->remotes; remote; remote = remote->next) {
 			/* test if we need to send */
 			if (sendto(pubsockets[j]->fd, pktbuf, len, 0, &remote->name.sa, remote->namelen) < 0)
-				error(0, errno, "sendto");
+				elog(LOG_WARNING, errno, "sendto");
 		}
 	}
 
@@ -698,7 +698,7 @@ void netio_sync(void)
 			if (!len)
 				continue;
 			if (sendto(iosockets[j]->fd, pktbuf, len, 0, &remote->name.sa, remote->namelen) < 0)
-				error(0, errno, "sendto failed");
+				elog(LOG_WARNING, errno, "sendto failed");
 		}
 	}
 	netio_dirty = 0;

@@ -54,7 +54,7 @@ static void teleruptor_handler(void *dat)
 			break;
 		}
 		if (tr->retries >= 3) {
-			error(0, 0, "teleruptor: maximum retry count reached");
+			elog(LOG_WARNING, 0, "teleruptor: maximum retry count reached");
 			tr->state = ST_IDLE;
 			break;
 		}

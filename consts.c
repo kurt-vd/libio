@@ -63,7 +63,7 @@ static void load_consts_file(const char *file)
 	fp = fopen(file, "r");
 	if (!fp) {
 		if (errno != ENOENT)
-			error(0, errno, "open %s", file);
+			elog(LOG_ERR, errno, "open %s", file);
 		return;
 	}
 	while (!feof(fp)) {
@@ -82,7 +82,7 @@ static void load_consts_file(const char *file)
 		key = strtok(line, "\t ");
 		value = strtok(NULL, "\t ");
 		if (!key || !value) {
-			error(0, 0, "bad line %s:%i", file, linenr);
+			elog(LOG_NOTICE, 0, "bad line %s:%i", file, linenr);
 			continue;
 		}
 		if (!strcmp(key, "include")) {
@@ -132,7 +132,7 @@ double libio_const(const char *name)
 			return ptr->fvalue;
 	}
 	/* warn, and add fake entry */
-	error(0, 0, "%s '%s' not found", __func__, name);
+	elog(LOG_NOTICE, 0, "%s '%s' not found", __func__, name);
 	add_entry(name, "nan");
 	return NAN;
 }

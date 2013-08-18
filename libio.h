@@ -1,9 +1,15 @@
+#include <syslog.h>
+
 #ifndef _libio_h_
 #define _libio_h_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* SYSLOG */
+extern void elog(int prio, int errnum, const char *fmt, ...)
+	__attribute__((format(printf,3,4)));
 
 /* GENERIC */
 extern void register_applet(const char *name, int (*fn)(int, char *[]));

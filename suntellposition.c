@@ -137,7 +137,7 @@ int suntellposition(int argc, char *argv[])
 
 	ret = where_is_the_sun(t, lat, lon, &incl, &azim);
 	if (ret < 0)
-		error(1, 0, "failed");
+		elog(LOG_CRIT, 0, "failed");
 
 	printf("incl\t%.3lf\nazimuth\t%.3lf\n", incl, azim);
 	return 0;

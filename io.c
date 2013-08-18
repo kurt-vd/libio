@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <error.h>
+#include "libio.h"
 
 struct applet {
 	const char *name;
@@ -20,7 +20,7 @@ void register_applet(const char *name, int (*fn)(int, char *[]))
 		sapplets += 16;
 		applets = realloc(applets, sizeof(*applets)*sapplets);
 		if (!applets)
-			error(1, errno, "realloc");
+			elog(LOG_CRIT, errno, "realloc");
 	}
 	applets[napplets++] = (struct applet){ .name = name, .fn = fn,};
 }
@@ -60,9 +60,7 @@ int main(int argc, char *argv[])
 		--argc;
 	}
 	if (applet) {
-#if 0
-		program_invocation_name = applet->name;
-#endif
+		openlog(applet->name, LOG_PERROR | LOG_PID, LOG_DAEMON);
 		return applet->fn(argc, argv);
 	}
 

@@ -71,11 +71,11 @@ static int hasingletouch(int argc, char *argv[])
 		break;
 	case 'l':
 		if (libio_bind_net(optarg) < 0)
-			error(1, 0, "bind %s failed", optarg);
+			elog(LOG_CRIT, 0, "bind %s failed", optarg);
 		break;
 	case 'i':
 		if (s.nin >= MAX_IN)
-			error(1, 0, "maximum %u inputs", MAX_IN);
+			elog(LOG_CRIT, 0, "maximum %u inputs", MAX_IN);
 		s.instr[s.nin++] = optarg;
 		break;
 
@@ -96,7 +96,7 @@ static int hasingletouch(int argc, char *argv[])
 	for (j = 0; j < s.nin; ++j) {
 		s.in[j] = create_iopar(s.instr[j]);
 		if (s.in[j] < 0)
-			error(1, 0, "failed to create %s", s.instr[j]);
+			elog(LOG_CRIT, 0, "failed to create %s", s.instr[j]);
 	}
 
 	for (; optind < argc; ++optind) {
@@ -133,7 +133,7 @@ static int hasingletouch(int argc, char *argv[])
 		if (evt_loop(-1) < 0) {
 			if (errno == EINTR)
 				continue;
-			error(0, errno, "evt_loop");
+			elog(LOG_ERR, errno, "evt_loop");
 			break;
 		}
 	}

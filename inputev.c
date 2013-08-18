@@ -155,7 +155,7 @@ static void read_inputdev(int fd, void *data)
 		if (errno == EAGAIN)
 			/* blocked */
 			break;
-		error(0, ret ? errno : 0, "%s %s%s",
+		elog(LOG_ERR, ret ? errno : 0, "%s %s%s",
 				__func__, dev->file, ret ? "" : ": EOF");
 		free_inputdev(dev);
 		return;
@@ -203,7 +203,7 @@ static struct inputdev *lookup_inputdev(const char *spec)
 
 	dev->fd = open(dev->file, O_RDONLY /*| O_CLOEXEC*/ | O_NONBLOCK);
 	if (dev->fd < 0)
-		error(1, errno, "open %s", dev->file);
+		elog(LOG_CRIT, errno, "open %s", dev->file);
 	fcntl(dev->fd, F_SETFD, fcntl(dev->fd, F_GETFD) | FD_CLOEXEC);
 
 	/* flush initial pending events */
@@ -247,7 +247,7 @@ struct iopar *mkinputevbtn(char *str)
 	btn->type = strtoul(strtok(NULL, ":;,") ?: "1", NULL, 0);
 	btn->code = strtoul(strtok(NULL, ":;,") ?: "0", NULL, 0);
 	if (!btn->code)
-		error(0, 0, "input: no code or zero?");
+		elog(LOG_NOTICE, 0, "input: no code or zero?");
 	while (1) {
 		tok = strtok(NULL, ",");
 		if (!tok)

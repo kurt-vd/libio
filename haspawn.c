@@ -59,8 +59,7 @@ static void sigchld(int sig)
 	int pid, status;
 
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
-		if (s.verbose)
-			error(0, 0, "pid %u exited", pid);
+		elog(LOG_INFO, 0, "pid %u exited", pid);
 
 	signal(sig, sigchld);
 }
@@ -71,12 +70,11 @@ static void starttorun(char **argv)
 
 	pid = fork();
 	if (!pid) {
-		if (s.verbose)
-			error(0, 0, "forked %u", getpid());
+		elog(LOG_NOTICE, 0, "forked %u", getpid());
 		execvp(*argv, argv);
-		error(1, errno, "execvp %s ...", *argv);
+		elog(LOG_CRIT, errno, "execvp %s ...", *argv);
 	} else if (pid < 0)
-		error(1, errno, "fork");
+		elog(LOG_CRIT, errno, "fork");
 }
 
 static int haspawn(int argc, char *argv[])
@@ -135,7 +133,7 @@ static int haspawn(int argc, char *argv[])
 		if (evt_loop(-1) < 0) {
 			if (errno == EINTR)
 				continue;
-			error(0, errno, "evt_loop");
+			elog(LOG_ERR, errno, "evt_loop");
 			break;
 		}
 	}

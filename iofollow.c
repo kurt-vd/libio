@@ -76,7 +76,7 @@ static int iofollow(int argc, char *argv[])
 		break;
 	case 'l':
 		if (libio_bind_net(optarg) < 0)
-			error(1, 0, "bind %s failed", optarg);
+			elog(LOG_CRIT, 0, "bind %s failed", optarg);
 		break;
 	case '?':
 	default:
@@ -102,9 +102,9 @@ static int iofollow(int argc, char *argv[])
 			double newvalue = get_iopar(indev) * slope + offset +
 				get_iopar(uoffset);
 			if (!s.dryrun && (set_iopar(outdev, newvalue) < 0))
-				error(1, errno, "set output device %.3lf", newvalue);
-			else if (s.dryrun || s.verbose)
-				error(0, 0, "%.3f +%.3f > %.3f",
+				elog(LOG_CRIT, errno, "set output device %.3lf", newvalue);
+			else
+				elog(LOG_INFO, 0, "%.3f +%.3f > %.3f",
 						get_iopar(indev),
 						get_iopar(uoffset),
 						newvalue);
@@ -115,7 +115,7 @@ static int iofollow(int argc, char *argv[])
 		if (evt_loop(-1) < 0) {
 			if (errno == EINTR)
 				continue;
-			error(0, errno, "evt_loop");
+			elog(LOG_ERR, errno, "evt_loop");
 			break;
 		}
 	}
