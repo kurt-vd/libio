@@ -116,6 +116,9 @@ static int haspawn(int argc, char *argv[])
 	param = create_iopar(argv[optind++]);
 	if (s.type)
 		ldid = new_longdet1(s.delay);
+	else
+		/* keep elder compiler happy */
+		ldid = -1;
 
 	/* main ... */
 	signal(SIGCHLD, sigchld);

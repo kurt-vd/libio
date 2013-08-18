@@ -45,7 +45,7 @@ static int netio_sendto(int argc, char *argv[])
 		fprintf(stderr, "usage: %s SOCKET MESSAGE\n", argv[0]);
 		exit(1);
 	}
-	return netio_send_msg(argv[1], argv[2]);
+	return (netio_send_msg(argv[1], argv[2]) >= 0) ? 0 : 1;
 }
 
 __attribute__((constructor))

@@ -4,7 +4,6 @@
 #include <errno.h>
 #include <time.h>
 
-#include <error.h>
 #include <getopt.h>
 
 #include <libevt.h>
@@ -116,7 +115,7 @@ static inline int lavabo_dimmed(void)
 	tm = *localtime(&now);
 	hours = tm.tm_hour + (tm.tm_min / 60) + (tm.tm_sec / 3600);
 
-	return !((hours > s.hopstaan) && (hours < s.hslapen));
+	return !((hours >= s.hopstaan) && (hours <= s.hslapen));
 }
 
 /* output timer */
@@ -138,6 +137,8 @@ static int ha2addons(int argc, char *argv[])
 {
 	int opt;
 	int ldbadk, ldmain, ldblue;
+
+	sleep(1);
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
@@ -204,9 +205,8 @@ static int ha2addons(int argc, char *argv[])
 				s.force_dim = 1;
 			else if (!strcmp(msg, "bright"))
 				s.force_dim = -1;
-			else if (!strcmp(msg, "normal")) {
+			else if (!strcmp(msg, "normal"))
 				s.force_dim = 0;
-			}
 		}
 		/* special badkamer input */
 
