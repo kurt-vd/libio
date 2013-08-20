@@ -136,10 +136,8 @@ static void schedule_output_reset_timer(int iopar, double timeout)
 /* main */
 static int ha2addons(int argc, char *argv[])
 {
-	int opt;
+	int opt, j;
 	int ldbadk, ldmain, ldblue;
-
-	sleep(1);
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
@@ -165,6 +163,13 @@ static int ha2addons(int argc, char *argv[])
 	s.hopstaan = libio_const("opstaan");
 	s.hslapen = libio_const("slapen");
 	s.lednight = libio_const("lednight");
+
+	/* wait up to 5sec for remote */
+	for (j = 0; j < 50; ++j, usleep(100000))
+		if (netio_probe_remote("unix:@ha2") >= 0)
+			break;
+	if (j)
+		elog(LOG_NOTICE, 0, "waited %.1lfs for remote", j*0.1);
 
 	s.led = create_iopar("led");
 	s.zolder = create_iopar("zolder");
