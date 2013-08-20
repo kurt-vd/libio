@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <time.h>
 
+#include <unistd.h>
 #include <getopt.h>
 
 #include <libevt.h>
