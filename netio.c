@@ -682,7 +682,8 @@ void netio_sync(void)
 		for (remote = pubsockets[j]->remotes; remote; remote = remote->next) {
 			/* test if we need to send */
 			if (sendto(pubsockets[j]->fd, pktbuf, len, 0, &remote->name.sa, remote->namelen) < 0)
-				elog(LOG_WARNING, errno, "sendto");
+				if (errno != ECONNREFUSED)
+					elog(LOG_WARNING, errno, "netio_sync public");
 		}
 	}
 
@@ -704,7 +705,7 @@ void netio_sync(void)
 			if (!len)
 				continue;
 			if (sendto(iosockets[j]->fd, pktbuf, len, 0, &remote->name.sa, remote->namelen) < 0)
-				elog(LOG_WARNING, errno, "sendto failed");
+				elog(LOG_WARNING, errno, "netio_sync client");
 		}
 	}
 	netio_dirty = 0;
@@ -750,7 +751,7 @@ int netio_send_msg(const char *uri, const char *msg)
 	sprintf(pkt, "*msg %u %s", ++netiomsgid, msg);
 	if (sendto(iosockets[family]->fd, pkt, strlen(pkt), 0, &name.sa, namelen) >= 0)
 		return netiomsgid;
-	elog(LOG_WARNING, errno, "sendto failed");
+	elog(LOG_WARNING, errno, "netio_send_msg");
 
 fail_sock:
 fail_family:
@@ -775,7 +776,8 @@ int netio_ack_msg(const char *msg)
 	if (sendto(pubsockets[netiomsgp->name.sa.sa_family]->fd, pkt, strlen(pkt), 0,
 				&netiomsgp->name.sa, netiomsgp->namelen) >= 0)
 		return netiomsgp->id;
-	elog(LOG_WARNING, errno, "sendto failed");
+	if (errno != ECONNREFUSED)
+		elog(LOG_WARNING, errno, "netio_ack_msg");
 	return -1;
 }
 
