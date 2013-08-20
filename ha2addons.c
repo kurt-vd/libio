@@ -202,12 +202,17 @@ static int ha2addons(int argc, char *argv[])
 		while (netio_msg_pending()) {
 			const char *msg = netio_recv_msg();
 
-			if (!strcmp(msg, "dim"))
-				s.force_dim = 1;
-			else if (!strcmp(msg, "bright"))
-				s.force_dim = -1;
-			else if (!strcmp(msg, "normal"))
-				s.force_dim = 0;
+			if (!strncmp("dim", msg, 3)) {
+				if (!strcmp(msg+3, "=on"))
+					s.force_dim = 1;
+				else if (!strcmp(msg+3, "=off"))
+					s.force_dim = -1;
+				else if (!strcmp(msg+3, "=normal"))
+					s.force_dim = 0;
+				netio_ack_msg(s.force_dim ? ((s.force_dim < 0) ? "dim=off" : "dim=on") : "dim=normal");
+			} else {
+				netio_ack_msg("unknown");
+			}
 		}
 		/* special badkamer input */
 
