@@ -67,6 +67,9 @@ extern const char *libio_next_const(const char *name);
 /* netio: publish local parameter via this socket */
 extern int libio_bind_net(const char *uri);
 
+/* netio: probe for remote socket (send a *probe packet) */
+extern int netio_probe_remote(const char *uri);
+
 /* netio messages */
 extern int netio_send_msg(const char *uri, const char *signal);
 /* ack current received message */

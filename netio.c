@@ -711,12 +711,12 @@ void netio_sync(void)
 	netio_dirty = 0;
 }
 
-/* netio messages */
-int netio_send_msg(const char *uri, const char *msg)
+/* netio tools */
+static int netio_send_direct(const char *uri, const char *pkt, int connmayfail)
 {
 	union sockaddrs name;
 	int namelen, family = 0;
-	char *pkt;
+	int ret;
 
 	do {
 		if (!uri)
@@ -747,15 +747,33 @@ int netio_send_msg(const char *uri, const char *msg)
 	if (namelen < 0)
 		goto fail_sock;
 
-	pkt = alloca(strlen(msg ?: "") + 32);
-	sprintf(pkt, "*msg %u %s", ++netiomsgid, msg);
-	if (sendto(iosockets[family]->fd, pkt, strlen(pkt), 0, &name.sa, namelen) >= 0)
-		return netiomsgid;
-	elog(LOG_WARNING, errno, "netio_send_msg");
+	ret = sendto(iosockets[family]->fd, pkt, strlen(pkt), 0, &name.sa, namelen);
+	if (ret < 0) {
+		if (!connmayfail || (errno != ECONNREFUSED))
+			elog(LOG_WARNING, errno, "netio_send_msg");
+	}
+	return ret;
 
 fail_sock:
 fail_family:
 	return -1;
+}
+
+int netio_probe_remote(const char *uri)
+{
+	return netio_send_direct(uri, "*probe", 1);
+}
+
+/* netio messages */
+int netio_send_msg(const char *uri, const char *msg)
+{
+	char *pkt;
+
+	pkt = alloca(strlen(msg ?: "") + 32);
+	sprintf(pkt, "*msg %u %s", ++netiomsgid, msg);
+	if (netio_send_direct(uri, pkt, 0) < 0)
+		return -1;
+	return netiomsgid;
 }
 
 int netio_ack_msg(const char *msg)
