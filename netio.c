@@ -68,6 +68,7 @@ struct iosocket {
 
 struct netiomsg {
 	struct netiomsg *next;
+	unsigned int id;
 	union sockaddrs name;
 	socklen_t namelen;
 	char txt[2];
@@ -84,6 +85,7 @@ static struct sockparam *localparams;
 /* netiomsg queue (first & last) */
 static struct netiomsg *netiomsgq, *netiomsgqlast;
 static struct netiomsg *netiomsgp;
+static unsigned int netiomsgid;
 
 /* locally used buffer */
 static char pktbuf[NETIO_MTU+1];
@@ -334,8 +336,7 @@ static void read_iosocket(int fd, void *data)
 					   on the subscribing side */
 					evt_add_timeout(2*NETIO_PINGTIME,
 							netio_lost_remote, remote);
-			}
-			if (!strncmp(tok, "*subscribe", 8)) {
+			} else if (!strncmp(tok, "*subscribe", 8)) {
 				if (!(sk->flags & FL_MYPUBLIC_SOCK)) {
 					elog(LOG_WARNING, 0, "subscriber via client socket");
 					continue;
@@ -344,23 +345,28 @@ static void read_iosocket(int fd, void *data)
 						netio_lost_remote, remote);
 				/* mark this as consumer (= send data) */
 				remote->flags |= FL_SENDTO;
+			} else if (!strncmp(tok, "*msg ", 5) || !strncmp(tok, "*ack ", 5)) {
+				struct netiomsg *msg;
+				int id;
+                                
+				id = strtoul(tok+5, &tok, 0);
+				if (*tok == ' ')
+					++tok;
+				/* fill new netiomsg */
+				msg = zalloc(sizeof(*msg) + strlen(tok));
+				msg->id = id;
+				msg->name = name;
+				msg->namelen = namelen;
+				strcpy(msg->txt, tok);
+                                
+				/* queue netiomsg */
+				if (netiomsgqlast)
+					netiomsgqlast->next = msg;
+				else
+					netiomsgq = msg;
+				netiomsgqlast = msg;
 			}
 			continue;
-		} else if (*tok == '!') {
-			struct netiomsg *msg;
-
-			/* fill new netiomsg */
-			msg = zalloc(sizeof(*msg) + strlen(tok));
-			msg->name = name;
-			msg->namelen = namelen;
-			strcpy(msg->txt, tok+1);
-
-			/* queue netiomsg */
-			if (netiomsgqlast)
-				netiomsgqlast->next = msg;
-			else
-				netiomsgq = msg;
-			netiomsgqlast = msg;
 		}
 		dat = strpbrk(tok, "=>");
 		if (!dat)
@@ -740,18 +746,47 @@ int netio_send_msg(const char *uri, const char *msg)
 	if (namelen < 0)
 		goto fail_sock;
 
-	pkt = alloca(strlen(msg ?: "") + 2);
-	sprintf(pkt, "!%s", msg);
-	return sendto(iosockets[family]->fd, pkt, strlen(pkt), 0, &name.sa, namelen);
+	pkt = alloca(strlen(msg ?: "") + 32);
+	sprintf(pkt, "*msg %u %s", ++netiomsgid, msg);
+	if (sendto(iosockets[family]->fd, pkt, strlen(pkt), 0, &name.sa, namelen) >= 0)
+		return netiomsgid;
+	elog(LOG_WARNING, errno, "sendto failed");
 
 fail_sock:
 fail_family:
 	return -1;
 }
 
+int netio_ack_msg(const char *msg)
+{
+	char *pkt;
+	int family;
+
+	if (!netiomsgp)
+		return -1;
+	family = netiomsgp->name.sa.sa_family;
+
+	/* autobind client socket */
+	if (!pubsockets[family])
+		return -1;
+
+	pkt = alloca(strlen(msg ?: "") + 32);
+	sprintf(pkt, "*ack %u %s", netiomsgp->id, msg);
+	if (sendto(pubsockets[netiomsgp->name.sa.sa_family]->fd, pkt, strlen(pkt), 0,
+				&netiomsgp->name.sa, netiomsgp->namelen) >= 0)
+		return netiomsgp->id;
+	elog(LOG_WARNING, errno, "sendto failed");
+	return -1;
+}
+
 int netio_msg_pending(void)
 {
 	return netiomsgq ? 1 : 0;
+}
+
+unsigned int netio_msg_id(void)
+{
+	return netiomsgp ? netiomsgp->id : 0;
 }
 
 const char *netio_recv_msg(void)

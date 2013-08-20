@@ -69,8 +69,12 @@ extern int libio_bind_net(const char *uri);
 
 /* netio messages */
 extern int netio_send_msg(const char *uri, const char *signal);
+/* ack current received message */
+extern int netio_ack_msg(const char *msg);
 extern int netio_msg_pending(void);
 extern const char *netio_recv_msg(void);
+/* call after netio_recv_msg() */
+extern unsigned int netio_msg_id(void);
 
 /* long-press-detection */
 extern int new_longdet(void); /* default delay */
