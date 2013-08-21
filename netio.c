@@ -330,7 +330,11 @@ static void read_iosocket(int fd, void *data)
 	for (tok = strtok_r(pktbuf, "\n", &savedstr); tok; tok = strtok_r(NULL, "\n", &savedstr)) {
 		if (*tok == '*') {
 			/* special command */
-			if (!strncmp(tok, "*keepalive", 8)) {
+			if (!strncmp(tok, "*ping", 5)) {
+				sendto(fd, "*pong", 5, 0, &name.sa, namelen);
+			} else if (!strncmp(tok, "*pong", 5)) {
+				/* ignore */
+			} else if (!strncmp(tok, "*keepalive", 8)) {
 				if (!(sk->flags & FL_MYPUBLIC_SOCK))
 					/* postpone destruction for the remotes
 					   on the subscribing side */
@@ -761,7 +765,7 @@ fail_family:
 
 int netio_probe_remote(const char *uri)
 {
-	return netio_send_direct(uri, "*probe", 1);
+	return netio_send_direct(uri, "*ping", 1);
 }
 
 /* netio messages */
