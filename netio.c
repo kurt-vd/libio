@@ -592,7 +592,7 @@ static struct iopar *mknetioremote(const char *uri, int family)
 	struct iosocket *sock;
 	char *parname;
 	union sockaddrs name;
-	int namelen;
+	int namelen, ret;
 
 	parname = strchr(uri, '#') + 1;
 	if (parname == (char *)1) {
@@ -621,12 +621,14 @@ static struct iopar *mknetioremote(const char *uri, int family)
 				!memcmp(&remote->name, &name, namelen))
 			break;
 	}
+
 	if (!remote) {
 		remote = zalloc(sizeof(*remote));
 		remote->namelen = namelen;
 		memcpy(&remote->name, &name, namelen);
 		add_ioremote(remote, sock);
-		if (sendto(sock->fd, "*subscribe\n", 10, 0, &name.sa, namelen) < 0) {
+		ret = sendto(sock->fd, "*subscribe\n", 10, 0, &name.sa, namelen);
+		if ((ret < 0) && (errno != ECONNREFUSED)) {
 			elog(LOG_WARNING, errno, "subscribe failed");
 			del_ioremote(remote);
 			free(remote);
