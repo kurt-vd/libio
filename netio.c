@@ -427,8 +427,11 @@ static void read_iosocket(int fd, void *data)
 			len += snprintf(pktbuf+len, NETIO_MTU-len, "%s=%lf\n",
 					par->name, par->iopar.value);
 		}
-		if (sendto(fd, pktbuf, len, 0, &remote->name.sa, remote->namelen) < 0)
+		if (sendto(fd, pktbuf, len, 0, &remote->name.sa, remote->namelen) < 0) {
 			elog(LOG_WARNING, errno, "send initial packet");
+			/* clear flag */
+			remote->flags &= ~FL_SENDTO;
+		}
 	}
 }
 
