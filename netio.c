@@ -16,6 +16,8 @@
 #include <libevt.h>
 #include "_libio.h"
 
+#define netiomsg_ignored "##ignored"
+
 union sockaddrs {
 	struct sockaddr sa;
 	struct sockaddr_un un;
@@ -86,6 +88,7 @@ static struct sockparam *localparams;
 static struct netiomsg *netiomsgq, *netiomsgqlast;
 static struct netiomsg *netiomsgp;
 static unsigned int netiomsgid;
+static int netiomsg_acked;
 
 /* locally used buffer */
 static char pktbuf[NETIO_MTU+1];
@@ -790,6 +793,8 @@ int netio_ack_msg(const char *msg)
 	char *pkt;
 	int family;
 
+	if (netiomsg_acked++)
+		return -1;
 	if (!netiomsgp)
 		return -1;
 	family = netiomsgp->name.sa.sa_family;
@@ -820,6 +825,7 @@ unsigned int netio_msg_id(void)
 
 const char *netio_recv_msg(void)
 {
+	netio_ack_msg(netiomsg_ignored);
 	if (netiomsgp)
 		free(netiomsgp);
 	/* shift queue */
@@ -830,6 +836,7 @@ const char *netio_recv_msg(void)
 	netiomsgq = netiomsgq->next;
 	if (!netiomsgq)
 		netiomsgqlast = NULL;
+	netiomsg_acked = 0;
 
 	/* unlink current entry */
 	netiomsgp->next = NULL;
