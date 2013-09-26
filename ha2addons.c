@@ -266,9 +266,14 @@ static int ha2addons(int argc, char *argv[])
 		set_longdet_btns(ldblue, s.blue, NBLUE);
 		if (longdet_edge(ldblue) && longdet_state(ldblue)) {
 			if (longdet_state(ldblue) == LONGPRESS) {
-				set_iopar(s.bluebad, 1);
-				set_iopar(s.blueled, 1);
-			} else if (active(s.blueled)) {
+				if (active(s.bluebad) && active(s.blueled))
+					/* keep bluebad only, turn led off */
+					set_iopar(s.blueled, 0);
+				else {
+					set_iopar(s.bluebad, 1);
+					set_iopar(s.blueled, 1);
+				}
+			} else if (active(s.blueled) || active(s.bluebad)) {
 				set_iopar(s.bluebad, 0);
 				set_iopar(s.blueled, 0);
 			} else if (lavabo_dimmed()) {
