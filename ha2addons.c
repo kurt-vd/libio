@@ -111,17 +111,27 @@ static inline void set_longdet_btns(int longdet, const int *iopars, int niopars)
 
 static inline int lavabo_dimmed(void)
 {
+	/* test manual overrule */
+	if (s.force_dim)
+		return (s.force_dim < 0) ? 0 : 1;
+
+	/* velux gordijn pos */
+	if ((get_iopar(s.veluxhg) + get_iopar(s.veluxlg)) > 1.5)
+		return 1;
+
+#if 0
+	/* time based */
 	time_t now;
 	struct tm tm;
 	double hours;
 
-	if (s.force_dim)
-		return (s.force_dim < 0) ? 0 : 1;
 	time(&now);
 	tm = *localtime(&now);
 	hours = tm.tm_hour + (tm.tm_min / 60) + (tm.tm_sec / 3600);
 
 	return !((hours >= s.hopstaan) && (hours <= s.hslapen));
+#endif
+	return 0;
 }
 
 /* output timer */
