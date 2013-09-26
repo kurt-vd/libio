@@ -76,9 +76,14 @@ static struct args {
 	int force_dim;
 } s;
 
+static inline int active(int iopar)
+{
+	return get_iopar(iopar) >= 0.5;
+}
+
 static inline int btnpushed(int iopar)
 {
-	return iopar_dirty(iopar) && (get_iopar(iopar) >= 0.5);
+	return iopar_dirty(iopar) && active(iopar);
 }
 
 static inline int btnspushed(const int *iopars, int niopars)
@@ -247,7 +252,7 @@ static int ha2addons(int argc, char *argv[])
 			if (longdet_state(ldblue) == LONGPRESS) {
 				set_iopar(s.bluebad, 1);
 				set_iopar(s.blueled, 1);
-			} else if (get_iopar(s.blueled) > 0.5) {
+			} else if (active(s.blueled)) {
 				set_iopar(s.bluebad, 0);
 				set_iopar(s.blueled, 0);
 			} else if (lavabo_dimmed()) {
@@ -273,11 +278,11 @@ static int ha2addons(int argc, char *argv[])
 			set_iopar(s.hal, 0);
 		} else if (longdet_edge(ldmain) && (longdet_state(ldmain) == SHORTPRESS)) {
 			/* toggle */
-			set_iopar(s.main, (get_iopar(s.main) > 0.5) ? 0 : 1);
+			set_iopar(s.main, !active(s.main));
 		}
 
 		if (btnpushed(s.poets)) {
-			if (get_iopar(s.main) >= 0.5) {
+			if (active(s.main)) {
 				/* turn a lot off */
 				set_iopar(s.led, 0);
 				set_iopar(s.lavabo, 0);
