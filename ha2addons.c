@@ -9,6 +9,7 @@
 
 #include <libevt.h>
 #include "_libio.h"
+#include "sun.h"
 
 /* configs */
 #define NBADK	4
@@ -119,6 +120,11 @@ static inline int lavabo_dimmed(void)
 	if ((get_iopar(s.veluxhg) + get_iopar(s.veluxlg)) > 1.5)
 		return 1;
 
+	/* sun's position */
+	double incl, az;
+	where_is_the_sun(time(NULL), default_gpslat, default_gpslon, &incl, &az);
+	if (incl < -0.25)
+		return 1;
 #if 0
 	/* time based */
 	time_t now;
