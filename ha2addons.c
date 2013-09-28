@@ -74,8 +74,10 @@ static struct args {
 	double lednight;
 
 	/* state */
-	int force_dim;
-} s;
+	const char *dim;
+} s = {
+	.dim = "velux", /* .dim must be set */
+};
 
 static inline int active(int iopar)
 {
@@ -113,30 +115,33 @@ static inline void set_longdet_btns(int longdet, const int *iopars, int niopars)
 static inline int lavabo_dimmed(void)
 {
 	/* test manual overrule */
-	if (s.force_dim)
-		return (s.force_dim < 0) ? 0 : 1;
-
-	/* velux gordijn pos */
-	if ((get_iopar(s.veluxhg) + get_iopar(s.veluxlg)) > 1.5)
+	if (strstr(s.dim, "on"))
 		return 1;
+	else if (strstr(s.dim, "off"))
+		return 0;
+	else if (strstr(s.dim, "velux")) {
+		/* velux gordijn pos */
+		if ((get_iopar(s.veluxhg) + get_iopar(s.veluxlg)) > 1.5)
+			return 1;
+	} else if (strstr(s.dim, "sun")) {
+		/* sun's position */
+		double incl, az;
+		where_is_the_sun(time(NULL), default_gpslat, default_gpslon,
+				&incl, &az);
+		if (incl < -0.25)
+			return 1;
+	} else if (strstr(s.dim, "time")) {
+		/* time based */
+		time_t now;
+		struct tm tm;
+		double hours;
 
-	/* sun's position */
-	double incl, az;
-	where_is_the_sun(time(NULL), default_gpslat, default_gpslon, &incl, &az);
-	if (incl < -0.25)
-		return 1;
-#if 0
-	/* time based */
-	time_t now;
-	struct tm tm;
-	double hours;
+		time(&now);
+		tm = *localtime(&now);
+		hours = tm.tm_hour + (tm.tm_min / 60) + (tm.tm_sec / 3600);
 
-	time(&now);
-	tm = *localtime(&now);
-	hours = tm.tm_hour + (tm.tm_min / 60) + (tm.tm_sec / 3600);
-
-	return !((hours >= s.hopstaan) && (hours <= s.hslapen));
-#endif
+		return !((hours >= s.hopstaan) && (hours <= s.hslapen));
+	}
 	return 0;
 }
 
@@ -229,13 +234,19 @@ static int ha2addons(int argc, char *argv[])
 			const char *msg = netio_recv_msg();
 
 			if (!strncmp("dim", msg, 3)) {
-				if (!strcmp(msg+3, "=on"))
-					s.force_dim = 1;
-				else if (!strcmp(msg+3, "=off"))
-					s.force_dim = -1;
-				else if (!strcmp(msg+3, "=normal"))
-					s.force_dim = 0;
-				netio_ack_msg(s.force_dim ? ((s.force_dim < 0) ? "dim=off" : "dim=on") : "dim=normal");
+				char *str;
+
+				if (msg[3] == '=') {
+					static char *buf;
+
+					if (buf)
+						free(buf);
+					buf = strdup(msg+4);
+					s.dim = buf;
+				}
+				asprintf(&str, "dim=%s", s.dim);
+				netio_ack_msg(str);
+				free(str);
 			} else {
 				netio_ack_msg("unknown");
 			}
