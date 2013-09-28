@@ -200,8 +200,7 @@ static inline struct iopar *_lookup_iopar(int iopar_id)
 
 struct iopar *lookup_iopar(int iopar_id)
 {
-	return ((iopar_id >= 0) && (iopar_id < tablesize)) ?
-		table[iopar_id] : NULL;
+	return _lookup_iopar(iopar_id);
 }
 
 static void add_iopar(struct iopar *iopar)
