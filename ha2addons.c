@@ -46,6 +46,8 @@ static const char help_msg[] =
 	" opstaan	0:00:00..24:00:00\n"
 	" slapen	0:00:00..24:00:00\n"
 	" lednight	0.01..1\n"
+	" longitude	-180..180\n"
+	" latitude	-90..90\n"
 	;
 
 #ifdef _GNU_SOURCE
@@ -72,6 +74,7 @@ static struct args {
 	int badk[NBADK], blue[NBLUE], imain[NMAIN], poets;
 	double hopstaan, hslapen;
 	double lednight;
+	double longitude, latitude;
 
 	/* state */
 	const char *dim;
@@ -126,8 +129,7 @@ static inline int lavabo_dimmed(void)
 	} else if (strstr(s.dim, "sun")) {
 		/* sun's position */
 		double incl, az;
-		where_is_the_sun(time(NULL), default_gpslat, default_gpslon,
-				&incl, &az);
+		where_is_the_sun(time(NULL), s.latitude, s.longitude, &incl, &az);
 		if (incl < -0.25)
 			return 1;
 	} else if (strstr(s.dim, "time")) {
@@ -189,6 +191,8 @@ static int ha2addons(int argc, char *argv[])
 	s.hopstaan = libio_const("opstaan");
 	s.hslapen = libio_const("slapen");
 	s.lednight = libio_const("lednight");
+	s.longitude = libio_const("longitude");
+	s.latitude = libio_const("latitude");
 
 	/* wait up to 5sec for remote */
 	for (j = 0; j < 50; ++j, usleep(100000))

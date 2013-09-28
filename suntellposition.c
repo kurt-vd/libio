@@ -120,8 +120,8 @@ int suntellposition(int argc, char *argv[])
 	}
 
 	if (optind+2 > argc) {
-		lat = default_gpslat;
-		lon = default_gpslon;
+		lat = libio_const("latitude");
+		lon = libio_const("longitude");
 		if (isnan(lat) || isnan(lon)) {
 			fputs(help_msg, stderr);
 			exit(1);

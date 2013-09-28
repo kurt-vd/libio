@@ -22,7 +22,7 @@ CPPFLAGS += -DLOCALVERSION=\"$(LOCALVERSION)\"
 
 libio.a: libio.o led.o inputev.o netio.o sysfspar.o \
 	virtual.o shared.o preset.o \
-	defaults.o consts.o longdetection.o \
+	consts.o longdetection.o \
 	applelight.o \
 	motor.o \
 	teleruptor.o
@@ -38,9 +38,6 @@ io: io.o iofollow.o ioserver.o ioprobe.o iotoggle.o \
 	libio.a
 	@echo " CC $@"
 	@$(CC) -o $@ -DNAME=\"$@\" $(LDFLAGS) $^ $(LDLIBS)
-
-# specific programs without libio
-defaults.o: CPPFLAGS += -DGPSLON=$(GPSLON) -DGPSLAT=$(GPSLAT)
 
 clean:
 	rm -f libio.a $(PROGS) $(wildcard *.o libllist/*.o libevt/*.o)
