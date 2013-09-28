@@ -104,8 +104,11 @@ static double get_new_dir(struct link *lnk)
 static const char *posname(const char *str)
 {
 	static char buf[128];
+	char *p = buf;
 
-	sprintf(buf, "p%s", str);
+	if (*str == '+')
+		*p++ = *str++;
+	sprintf(p, "p%s", str);
 	return buf;
 }
 

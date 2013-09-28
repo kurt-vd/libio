@@ -35,7 +35,7 @@ static const char help_msg[] =
 	" bluebad\n"
 	" main blueled\n"
 	" hal\n"
-	" veluxhg veluxlg\n"
+	" veluxhgpos veluxlgpos\n"
 	"Required inputs:\n"
 	" badk1 badk2 badk3 ...\n"
 	" blue1 blue2 ... \n"
@@ -68,7 +68,7 @@ static struct args {
 	int verbose;
 	int led, zolder, fan, lavabo, bad,
 	    bluebad, main, blueled, hal,
-	    veluxhg, veluxlg;
+	    veluxhgpos, veluxlgpos;
 	int badk[NBADK], blue[NBLUE], imain[NMAIN], poets;
 	double hopstaan, hslapen;
 	double lednight;
@@ -121,7 +121,7 @@ static inline int lavabo_dimmed(void)
 		return 0;
 	else if (strstr(s.dim, "velux")) {
 		/* velux gordijn pos */
-		if ((get_iopar(s.veluxhg) + get_iopar(s.veluxlg)) > 1.5)
+		if ((get_iopar(s.veluxhgpos) + get_iopar(s.veluxlgpos)) > 1.5)
 			return 1;
 	} else if (strstr(s.dim, "sun")) {
 		/* sun's position */
@@ -206,8 +206,8 @@ static int ha2addons(int argc, char *argv[])
 	s.main = create_iopar("main");
 	s.blueled = create_iopar("blueled");
 	s.hal = create_iopar("hal");
-	s.veluxhg = create_iopar("veluxhg");
-	s.veluxlg = create_iopar("veluxlg");
+	s.veluxhgpos = create_iopar("veluxhgpos");
+	s.veluxlgpos = create_iopar("veluxlgpos");
 
 	s.badk[0] = create_iopar("badk1");
 	s.badk[1] = create_iopar("badk2");
