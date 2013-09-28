@@ -14,11 +14,21 @@ struct iopar {
 	int (*set)(struct iopar *, double value);
 	/* method to refresh value just before get */
 	void (*jitget)(struct iopar *);
+	/* direct event notification */
+	struct iopar_notifier {
+		struct iopar_notifier *next;
+		void *dat;
+		void (*fn)(void *dat);
+	} *notifiers;
 };
 
 static inline void iopar_set_dirty(struct iopar *iopar)
 {
+	struct iopar_notifier *notifier;
+
 	iopar->state |= ST_DIRTY;
+	for (notifier = iopar->notifiers; notifier; notifier = notifier->next)
+		notifier->fn(notifier->dat);
 }
 
 static inline void iopar_set_present(struct iopar *iopar)
@@ -46,6 +56,10 @@ extern struct iopar *lookup_iopar(int iopar_id);
 
 /* cleanup iopar, just before freeing */
 extern void cleanup_libiopar(struct iopar *iopar);
+
+/* direct event notifications */
+extern int iopar_add_notifier(int iopar, void (*)(void *), void *dat);
+extern int iopar_del_notifier(int iopar, void (*)(void *), void *dat);
 
 /* real parameter constructors */
 extern struct iopar *mkpreset(char *str);
