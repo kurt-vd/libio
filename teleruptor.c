@@ -101,6 +101,19 @@ static void del_teleruptor(struct iopar *iopar)
 	destroy_iopar(tr->out);
 }
 
+static void teleruptor_feedback(void *dat)
+{
+	struct tr *tr = dat;
+
+	/*
+	 * Only events during ST_IDLE are processed.
+	 * All other events are somewhat expected, and we process
+	 * them in teleruptor_handler, with stricter timings
+	 */
+	if (tr->state == ST_IDLE)
+		teleruptor_update(tr);
+}
+
 struct iopar *mkteleruptor(char *str)
 {
 	struct tr *tr;
@@ -116,6 +129,8 @@ struct iopar *mkteleruptor(char *str)
 		goto fail_out;
 	tr->fdb = create_iopar(strtok_r(NULL, "+", &savedstr));
 	if (tr->fdb < 0)
+		goto fail_fdb;
+	if (iopar_add_notifier(tr->fdb, teleruptor_feedback, tr) < 0)
 		goto fail_fdb;
 	/* preset initial state */
 	teleruptor_update(tr);
