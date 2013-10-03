@@ -290,9 +290,16 @@ void cleanup_libiopar(struct iopar *iopar)
 void destroy_iopar(int iopar_id)
 {
 	struct iopar *iopar = _lookup_iopar(iopar_id);
+	struct iopar_notifier *notifier;
 
 	if (!iopar)
 		return;
+	/* remove notifiers */
+	for (; iopar->notifiers; ) {
+		notifier = iopar->notifiers;
+		iopar->notifiers = iopar->notifiers->next;
+		free(notifier);
+	}
 	/* iopar_id has proven valid here */
 	if (iopar->del)
 		iopar->del(iopar);
@@ -373,4 +380,43 @@ void libio_flush(void)
 		if (table[j])
 			table[j]->state &= ~ST_DIRTY;
 	}
+}
+
+/* direct event notifications */
+int iopar_add_notifier(int iopar_id, void (*fn)(void *), void *dat)
+{
+	struct iopar *iopar = _lookup_iopar(iopar_id);
+	struct iopar_notifier *notifier;
+
+	if (!iopar) {
+		errno = ENODEV;
+		return -1;
+	}
+	notifier = zalloc(sizeof(*notifier));
+	notifier->fn = fn;
+	notifier->dat = dat;
+	notifier->next = iopar->notifiers;
+	iopar->notifiers = notifier;
+	return 0;
+}
+
+int iopar_del_notifier(int iopar_id, void (*fn)(void *), void *dat)
+{
+	struct iopar *iopar = _lookup_iopar(iopar_id);
+	struct iopar_notifier *notifier, **pnot;
+
+	if (!iopar) {
+		errno = ENODEV;
+		return -1;
+	}
+	for (pnot = &iopar->notifiers; *pnot; pnot = &(*pnot)->next) {
+		notifier = *pnot;
+		if (notifier->dat == dat && notifier->fn == fn) {
+			*pnot = notifier->next;
+			free(notifier);
+			return 0;
+		}
+	}
+	errno = ENOENT;
+	return -1;
 }

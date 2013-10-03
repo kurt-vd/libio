@@ -391,9 +391,9 @@ static void read_iosocket(int fd, void *data)
 			if (!par)
 				/* TODO: auto-create */
 				break;
+			par->iopar.value = strtod(dat, NULL);
 			iopar_set_dirty(&par->iopar);
 			iopar_set_present(&par->iopar);
-			par->iopar.value = strtod(dat, NULL);
 			if (libio_trace >= 3)
 				fprintf(stderr, "netio:%s %s\n", par->name, dat);
 			break;
@@ -412,10 +412,11 @@ static void read_iosocket(int fd, void *data)
 				elog(LOG_WARNING, 0, "remote writes %s, refused!", par->name);
 				break;
 			}
-			iopar_set_dirty(&par->iopar);
-			par->iopar.value = strtod(dat, NULL);
 			/* trigger broadcast */
 			netio_dirty = 1;
+			/* set parameter */
+			par->iopar.value = strtod(dat, NULL);
+			iopar_set_dirty(&par->iopar);
 			if (libio_trace >= 3)
 				fprintf(stderr, "netio:%s %s\n", par->name, dat);
 			break;

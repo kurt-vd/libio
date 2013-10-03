@@ -129,16 +129,16 @@ static void evbtn_debounced(void *dat)
 
 static void evbtn_newdata(struct evbtn *btn, const struct input_event *ev)
 {
+	/* iopar_set_present(&btn->iopar); */
 	if ((int)btn->iopar.value != ev->value) {
+		/* always set the correct value, regardless of signalling */
+		btn->iopar.value = ev->value;
+
 		if (btn->flags & FL_DEBOUNCE)
 			evt_add_timeout(debouncetime, evbtn_debounced, btn);
 		else
 			iopar_set_dirty(&btn->iopar);
 	}
-
-	/* always set the correct value, regardless of signalling */
-	btn->iopar.value = ev->value;
-	/* iopar_set_present(&btn->iopar); */
 }
 
 static void read_inputdev(int fd, void *data)

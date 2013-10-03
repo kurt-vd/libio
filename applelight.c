@@ -45,8 +45,8 @@ static void applelight_read(struct applelight *al, int warn)
 
 	ivalue = strtoul(buf+1, NULL, 10);
 	if (ivalue != (int)(al->iopar.value * 255)) {
-		iopar_set_dirty(&al->iopar);
 		al->iopar.value = ivalue / 255.0;
+		iopar_set_dirty(&al->iopar);
 	}
 	/* mark as present */
 	iopar_set_present(&al->iopar);
