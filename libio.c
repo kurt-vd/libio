@@ -248,23 +248,31 @@ struct iopar *create_libiopar(const char *str)
 	return NULL;
 }
 
-int create_iopar_type(const char *type, const char *spec)
+int create_iopar_type(const char *type, const char *fmt, ...)
 {
 	int j;
 	struct iopar *iopar;
+	char *spec;
+	va_list va;
+
+	va_start(va, fmt);
+	vasprintf(&spec, fmt, va);
+	va_end(va);
 
 	for (j = 0; iotypes[j].prefix; ++j) {
 		if (!strcmp(iotypes[j].prefix, type)) {
-			iopar = iotypes[j].create(strdupa(spec));
+			iopar = iotypes[j].create(spec);
 			if (iopar) {
 				add_iopar(iopar);
 				return iopar->id;
 			}
 			elog(LOG_NOTICE, 0, "%s %s %s failed", __func__, type, spec);
+			free(spec);
 			return -1;
 		}
 	}
 	elog(LOG_NOTICE, 0, "%s type %s unknown", __func__, spec);
+	free(spec);
 	return -1;
 }
 
