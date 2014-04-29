@@ -30,6 +30,7 @@ io: io.o iofollow.o ioserver.o ioprobe.o iotoggle.o \
 	hadirect.o hamotor.o hasingletouch.o haspawn.o \
 	ha2addons.o \
 	suntellposition.o sunposition.o \
+	cpuload.o \
 	macbookd.o \
 	info.o \
 	libio.a

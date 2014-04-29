@@ -69,6 +69,7 @@ extern struct iopar *mkled(char *str);
 extern struct iopar *mkbacklight(char *str);
 extern struct iopar *mkinputevbtn(char *str);
 extern struct iopar *mkapplelight(char *sysfs);
+extern struct iopar *mkcpupar(char *sysfs);
 extern struct iopar *mkmotordir(char *str);
 extern struct iopar *mkmotorpos(char *str);
 extern struct iopar *mkteleruptor(char *str);
