@@ -65,6 +65,7 @@ extern int iopar_del_notifier(int iopar, void (*)(void *), void *dat);
 extern struct iopar *mkpreset(char *str);
 extern struct iopar *mkvirtual(char *str);
 extern struct iopar *mkshared(char *cstr);
+extern struct iopar *mksysfspar(char *str);
 extern struct iopar *mkled(char *str);
 extern struct iopar *mkbacklight(char *str);
 extern struct iopar *mkinputevbtn(char *str);

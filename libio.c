@@ -160,6 +160,7 @@ static const struct {
 	{ "preset", mkpreset, },
 	{ "virtual", mkvirtual, },
 	{ "shared", mkshared, },
+	{ "sysfs", mksysfspar, },
 	{ "led", mkled, },
 	{ "backlight", mkbacklight, },
 	{ "in", mkinputevbtn, },
