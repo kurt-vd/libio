@@ -130,6 +130,22 @@ static int macbookd(int argc, char *argv[])
 
 	/* main ... */
 	while (1) {
+		while (netio_msg_pending()) {
+			const char *msg = netio_recv_msg();
+
+			if (!strncmp("refresh", msg, 7)) {
+				char buf[64];
+
+				set_iopar(kbd, get_iopar(kbd));
+				set_iopar(bl, get_iopar(bl));
+				sprintf(buf, "refresh=backlight=%.3lf,kbd=%.3lf",
+						get_iopar(bl), get_iopar(kbd));
+				netio_ack_msg(buf);
+			} else {
+				netio_ack_msg("unknown");
+			}
+		}
+
 		changed = 0;
 
 		if (iopar_dirty(light))
