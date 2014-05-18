@@ -101,8 +101,10 @@ fail_open:
 
 static void sysfspar_timeout(void *data)
 {
-	sysfspar_read(data, 0);
-	evt_repeat_timeout(1, sysfspar_timeout, data);
+	struct sysfspar *sp = data;
+
+	sysfspar_read(sp, 0);
+	evt_repeat_timeout(sp->delay, sysfspar_timeout, sp);
 }
 
 static int set_sysfspar(struct iopar *iopar, double value)
