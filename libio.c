@@ -192,6 +192,13 @@ void libio_set_trace(int value)
 static struct iopar **table;
 static int tablesize, tablespot = 1;
 
+__attribute__((destructor))
+static void free_table(void)
+{
+	if (table)
+		free(table);
+}
+
 static inline struct iopar *_lookup_iopar(int iopar_id)
 {
 	return ((iopar_id >= 0) && (iopar_id < tablesize)) ?

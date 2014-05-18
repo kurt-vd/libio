@@ -14,6 +14,13 @@ static struct applet *applets;
 static int napplets;
 static int sapplets;
 
+__attribute__((destructor))
+static void free_applets(void)
+{
+	if (applets)
+		free(applets);
+}
+
 void register_applet(const char *name, int (*fn)(int, char *[]))
 {
 	if (napplets >= sapplets) {
