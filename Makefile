@@ -27,6 +27,7 @@ libio.a: libio.o led.o inputev.o netio.o sysfspar.o \
 	@ar crs $@ $^
 
 io: io.o iofollow.o ioserver.o ioprobe.o iotoggle.o \
+	iotrace.o \
 	hadirect.o hamotor.o hasingletouch.o haspawn.o \
 	ha2addons.o \
 	suntellposition.o sunposition.o \
