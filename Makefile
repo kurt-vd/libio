@@ -10,9 +10,6 @@ LDFLAGS =
 LDLIBS	= -levt -lllist -lm -lrt
 STRIP	= strip
 
-GPSLON	= NAN
-GPSLAT	= NAN
-
 -include config.mk
 CPPFLAGS += -DLOCALVERSION=\"$(LOCALVERSION)\"
 
