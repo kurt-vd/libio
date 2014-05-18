@@ -22,6 +22,8 @@ static const char *const strflags[] = {
 		#define ID_EDGE		2
 	"hysteresis",
 		#define ID_HYSTERESIS	3
+	"mul",
+		#define ID_MULTIPLIER	4
 	NULL,
 };
 
@@ -34,6 +36,7 @@ struct sysfspar {
 	double delay;
 	double edge;
 	double hyst;
+	double mul;
 	char sysfs[2];
 };
 
@@ -65,7 +68,7 @@ static void sysfspar_read(struct sysfspar *sp, int warn)
 	buf[ret] = 0;
 
 	ivalue = strtoul(buf, NULL, 10);
-	fvalue = ivalue / 1e3;
+	fvalue = ivalue * sp->mul;
 	if (!isnan(sp->edge)) {
 		/* boolean detection */
 		if (!isnan(sp->hyst)) {
@@ -168,6 +171,7 @@ struct iopar *mksysfspar(char *spec)
 	sp->edge = NAN;
 	sp->hyst = NAN;
 	sp->delay = 1;
+	sp->mul = 1;
 
 	while (1) {
 		tok = mygetsubopt(strtok(NULL, ","));
@@ -185,6 +189,9 @@ struct iopar *mksysfspar(char *spec)
 			break;
 		case ID_EDGE:
 			sp->edge = strtod(mygetsuboptvalue() ?: "0", NULL);
+			break;
+		case ID_MULTIPLIER:
+			sp->mul = strtod(mygetsuboptvalue() ?: "1", NULL);
 			break;
 		default:
 			sp->flags |= 1 << flag;
