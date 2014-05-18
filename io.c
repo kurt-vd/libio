@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include <locale.h>
+
 #include "libio.h"
 
 struct applet {
@@ -57,6 +59,7 @@ int main(int argc, char *argv[])
 	const struct applet *applet;
 	int j;
 
+	setlocale(LC_TIME, "");
 	strapp = strrchr(argv[0], '/');
 	strapp = strapp ? strapp+1 : argv[0];
 
