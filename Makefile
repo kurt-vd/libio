@@ -20,6 +20,7 @@ CPPFLAGS += -DLOCALVERSION=\"$(LOCALVERSION)\"
 libio.a: libio.o led.o inputev.o netio.o sysfspar.o \
 	virtual.o shared.o preset.o \
 	consts.o longdetection.o \
+	cpuload.o \
 	applelight.o \
 	motor.o \
 	teleruptor.o
@@ -31,7 +32,6 @@ io: io.o iofollow.o ioserver.o ioprobe.o iotoggle.o \
 	hadirect.o hamotor.o hasingletouch.o haspawn.o \
 	ha2addons.o \
 	suntellposition.o sunposition.o \
-	cpuload.o \
 	macbookd.o \
 	info.o \
 	libio.a
