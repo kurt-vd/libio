@@ -43,6 +43,7 @@ struct motor {
 		#define ST_IDLE		0
 		#define ST_BUSY		1
 		#define ST_WAIT		2 /* implement cooldown period */
+		#define ST_POST		3
 	#define COOLDOWN_TIME	1
 	int ctrltype;
 		#define CTRL_NONE	0
@@ -107,6 +108,10 @@ static void motor_update_position(struct motor *mot)
 		mot->pospar.value +=
 			(motor_curr_speed(mot) * (currtime - mot->lasttime)) /
 			mot->maxval;
+		if (mot->pospar.value < 0)
+			mot->pospar.value = 0;
+		else if (mot->pospar.value > 1)
+			mot->pospar.value = 1;
 		iopar_set_dirty(&mot->pospar);
 	}
 	mot->lasttime = currtime;
@@ -185,11 +190,17 @@ static void motor_handler(void *dat)
 		mot->state = ST_IDLE;
 
 	if (mot->ctrltype == CTRL_POS) {
-		if (fabs(motor_curr_position(mot) - mot->setpoint)*mot->maxval < 0.01) {
+		if (mot->state == ST_POST) {
+			/* stop now */
+			if (change_motor_speed(mot, 0) < 0)
+				goto repeat;
+			mot->state = ST_WAIT;
+		} else if (fabs(motor_curr_position(mot) - mot->setpoint)*mot->maxval < 0.01) {
 			if (motor_curr_speed(mot) != 0) {
-				if (change_motor_speed(mot, 0) < 0)
-					goto repeat;
-				mot->state = ST_WAIT;
+				/* run 10% in 'post' mode */
+				mot->state = ST_POST;
+				evt_add_timeout(mot->maxval * 0.10, motor_handler, mot);
+				return;
 			}
 		} else if (motor_curr_position(mot) < mot->setpoint) {
 			if (motor_curr_speed(mot) < 0) {
@@ -216,22 +227,34 @@ static void motor_handler(void *dat)
 			evt_add_timeout(next_wakeup(mot), motor_handler, mot);
 		return;
 repeat:
-		evt_add_timeout(0.5, motor_handler, mot);
+		evt_add_timeout(0.1, motor_handler, mot);
 	} else {
 		/* DIR control */
 
 		/* test for end-of-course statuses */
-		if ((mot->reqspeed < 0) && (motor_curr_position(mot) <= 0))
+		if (mot->state == ST_POST) {
 			mot->reqspeed = 0;
-		else if ((mot->reqspeed > 0) && (motor_curr_position(mot) >= 1))
-			mot->reqspeed = 0;
+		} else if (((mot->reqspeed < 0) && (motor_curr_position(mot) <= 0)) ||
+			   ((mot->reqspeed > 0) && (motor_curr_position(mot) >= 1))) {
+			/* run 10% in 'post' mode */
+			mot->state = ST_POST;
+			evt_add_timeout(mot->maxval * 0.10, motor_handler, mot);
+			return;
+		}
 
 		oldspeed = motor_curr_speed(mot);
-		if (fabs(oldspeed - mot->reqspeed) > 0.01) {
+		if ((oldspeed * mot->reqspeed) < 0) {
+			/* reverse direction, wait a bit */
+			if (change_motor_speed(mot, 0) < 0) {
+				/* repeat */
+				evt_add_timeout(0.1, motor_handler, mot);
+				return;
+			}
+		} else if (fabs(oldspeed - mot->reqspeed) > 0.01) {
 			/* speed must change */
 			if (change_motor_speed(mot, mot->reqspeed) < 0) {
 				/* repeat */
-				evt_add_timeout(0.5, motor_handler, mot);
+				evt_add_timeout(0.1, motor_handler, mot);
 				return;
 			}
 		}
@@ -250,7 +273,7 @@ repeat:
 
 static inline void call_motor_handler(struct motor *mot)
 {
-	if (mot->state != ST_WAIT)
+	if ((mot->state != ST_WAIT) && (mot->state != ST_POST))
 		motor_handler(mot);
 }
 
