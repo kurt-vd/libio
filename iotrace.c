@@ -7,6 +7,9 @@
 
 #include <unistd.h>
 #include <getopt.h>
+#include <ifaddrs.h>
+#include <sys/socket.h>
+#include <linux/if.h>
 
 #include <libevt.h>
 #include "_libio.h"
@@ -19,6 +22,9 @@ static const char help_msg[] =
 	"Parameters\n"
 	" FORMATSTRING		printf-style formatstring.\n"
 	"			Only floating point specifier are allowed\n"
+	"			Special specifiers:\n"
+	"			%date\n"
+	"			%net(IFACE)\n"
 	" PARAM			The parameters that provide values\n"
 	"Options:\n"
 	" -V, --version		Show version\n"
@@ -52,6 +58,48 @@ static struct args {
 	int ne;
 	const char *fmt;
 } s;
+
+/* cached ifaddrs table */
+static struct ifaddrs *ifa_table;
+
+static const char *netdevstr(const char *iface)
+{
+	static char buf[1024];
+	char *str = buf;
+	int flags_printed;
+	struct ifaddrs *ptr;
+
+	str += sprintf(str, "%s: ", iface);
+
+	if (!ifa_table) {
+		if (getifaddrs(&ifa_table) < 0) {
+			str += sprintf(str, "fail");
+			goto done;
+		}
+	}
+
+	flags_printed = 0;
+	for (ptr = ifa_table; ptr; ptr = ptr->ifa_next) {
+		if (strcmp(iface, ptr->ifa_name))
+			continue;
+		if (!flags_printed) {
+			flags_printed = 1;
+
+			/* print flags, only once */
+			if (!(ptr->ifa_flags & IFF_UP))
+				str += sprintf(str, "down");
+			else if (!(ptr->ifa_flags & IFF_RUNNING))
+				str += sprintf(str, "no-carrier");
+			else
+				str += sprintf(str, "up");
+		}
+	}
+	if (!flags_printed)
+		/* flags never printed means device not present */
+		str += sprintf(str, "n.a.");
+done:
+	return buf;
+}
 
 static int myprint(FILE *fp, const char *fmt)
 {
@@ -88,6 +136,21 @@ static int myprint(FILE *fp, const char *fmt)
 			fmt += 5;
 			continue;
 		}
+		if (!strncmp(fmt, "%net(", 5)) {
+			const char *str;
+			char ifname[IFNAMSIZ+1] = {};
+
+			fmt += 5;
+			str = strchr(fmt, ')');
+			if ((str - fmt) >= sizeof(ifname))
+				elog(LOG_CRIT, 0, "net iface name too long '%.*s'",
+						(int)(str - fmt), fmt);
+			strncpy(ifname, fmt, str - fmt);
+			fmt = str+1;
+
+			fputs(netdevstr(ifname), fp);
+			continue;
+		}
 		/* put number */
 		str = strchr(fmt, 'f');
 		if (!str) {
@@ -111,6 +174,10 @@ static int myprint(FILE *fp, const char *fmt)
 		++idx;
 		fputs(strbuf, fp);
 		result += strlen(strbuf);
+	}
+	if (ifa_table) {
+		freeifaddrs(ifa_table);
+		ifa_table = NULL;
 	}
 	return result;
 }
