@@ -10,6 +10,7 @@
 #include <ifaddrs.h>
 #include <sys/socket.h>
 #include <linux/if.h>
+#include <arpa/inet.h>
 
 #include <libevt.h>
 #include "_libio.h"
@@ -65,6 +66,7 @@ static struct ifaddrs *ifa_table;
 static const char *netdevstr(const char *iface)
 {
 	static char buf[1024];
+	static char inetstr[INET6_ADDRSTRLEN];
 	char *str = buf;
 	int flags_printed;
 	struct ifaddrs *ptr;
@@ -92,6 +94,20 @@ static const char *netdevstr(const char *iface)
 				str += sprintf(str, "no-carrier");
 			else
 				str += sprintf(str, "up");
+		}
+		switch (ptr->ifa_addr->sa_family) {
+		case AF_PACKET:
+			break;
+		case AF_INET:
+			str += sprintf(str, ", %s",
+					inet_ntop(ptr->ifa_addr->sa_family, &((const struct sockaddr_in *)ptr->ifa_addr)->sin_addr, inetstr, sizeof(inetstr))
+					?: "inet");
+			break;
+		case AF_INET6:
+			str += sprintf(str, ", %s",
+					inet_ntop(ptr->ifa_addr->sa_family, &((const struct sockaddr_in6 *)ptr->ifa_addr)->sin6_addr, inetstr, sizeof(inetstr))
+					?: "inet6");
+			break;
 		}
 	}
 	if (!flags_printed)
