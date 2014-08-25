@@ -25,6 +25,8 @@ static const char *const strflags[] = {
 		#define ID_HYSTERESIS	3
 	"mul",
 		#define ID_MULTIPLIER	4
+	"max",
+		#define ID_MAX		5
 	NULL,
 };
 
@@ -196,6 +198,9 @@ struct iopar *mksysfspar(char *spec)
 			break;
 		case ID_MULTIPLIER:
 			sp->mul = strtod(mygetsuboptvalue() ?: "1", NULL);
+			break;
+		case ID_MAX:
+			sp->mul = 1 / strtod(mygetsuboptvalue() ?: "1", NULL);
 			break;
 		default:
 			sp->flags |= 1 << flag;
