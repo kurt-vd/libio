@@ -17,7 +17,8 @@ static const char *const strflags[] = {
 	"delay",
 		#define ID_DELAY	0
 	"invert",
-		#define FL_INVERT	(1 << 1)
+		#define ID_INVERT	1
+		#define FL_INVERT	(1 << ID_INVERT)
 	"edge",
 		#define ID_EDGE		2
 	"hysteresis",
@@ -183,6 +184,9 @@ struct iopar *mksysfspar(char *spec)
 		switch (flag) {
 		case ID_DELAY:
 			sp->delay = strtod(mygetsuboptvalue() ?: "1", NULL);
+			break;
+		case ID_INVERT:
+			sp->flags |= FL_INVERT;
 			break;
 		case ID_HYSTERESIS:
 			sp->hyst = strtod(mygetsuboptvalue() ?: "0", NULL);
