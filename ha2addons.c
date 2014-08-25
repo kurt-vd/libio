@@ -156,7 +156,7 @@ static void output_timeout(void *dat)
 static void schedule_output_reset_timer(int iopar, double timeout)
 {
 	if (iopar_dirty(iopar) && (get_iopar(iopar) > 0))
-		evt_add_timeout(60*60*1.5, output_timeout, (void *)(long)iopar);
+		evt_add_timeout(timeout, output_timeout, (void *)(long)iopar);
 	else if (iopar_dirty(iopar) && (get_iopar(iopar) < 0.001))
 		evt_remove_timeout(output_timeout, (void *)(long)iopar);
 }
