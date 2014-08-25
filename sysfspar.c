@@ -48,7 +48,7 @@ static void sysfspar_read(struct sysfspar *sp, int warn)
 	int fd, ret;
 	long ivalue;
 	double fvalue;
-	char buf[32];
+	char buf[32], *str;
 
 	/* warn if requested, or param is present */
 	warn |= sp->iopar.state & ST_PRESENT;
@@ -70,7 +70,10 @@ static void sysfspar_read(struct sysfspar *sp, int warn)
 	close(fd);
 	buf[ret] = 0;
 
-	ivalue = strtoul(buf, NULL, 10);
+	str = strpbrk(buf, "01234567890+-.");
+	if (!str)
+		goto fail_parse;
+	ivalue = strtoul(str, NULL, 10);
 	fvalue = ivalue * sp->mul;
 	if (!isnan(sp->edge)) {
 		/* boolean detection */
@@ -102,6 +105,7 @@ static void sysfspar_read(struct sysfspar *sp, int warn)
 fail_read:
 	close(fd);
 fail_open:
+fail_parse:
 	iopar_clr_present(&sp->iopar);
 }
 
