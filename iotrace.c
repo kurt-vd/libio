@@ -19,6 +19,11 @@
 static const char help_msg[] =
 	NAME ": Print a new line with iolib values on every change\n"
 	"Usage: " NAME " FORMATSTRING [[MUL*]PARAM ...]\n"
+	"	" NAME " FILE\n"
+	"\n"
+	"The first form takes all parameters from commandline\n"
+	"the second form reads all parameters from FILE (- for stdin)\n"
+	"each non-empty, non-comment line is taken as parameter\n"
 	"\n"
 	"Parameters\n"
 	" FORMATSTRING		printf-style formatstring.\n"
@@ -198,11 +203,48 @@ static int myprint(FILE *fp, const char *fmt)
 	return result;
 }
 
+/* parameters from stdin mode */
+static char *fetch_param_from_file(FILE *fp)
+{
+	static char *line;
+	static size_t linesize;
+	int ret;
+
+	do {
+		ret = getline(&line, &linesize, fp);
+		if (ret < 0)
+			return NULL;
+		for (; ret > 0; --ret)
+			if (!strchr(" \t\r\n\v\f", line[ret-1]))
+				break;
+		line[ret] = 0;
+	} while (!ret || (*line == '#'));
+	return line;
+}
+
+/* parser helper */
+static void parse_param(struct ent *e, char *str)
+{
+	char *endp;
+
+	e->mul = strtod(str, &endp);
+	if ((endp > str) && (*endp == '*')) {
+		/* skip '*' */
+		++endp;
+	} else {
+		/* reset parser */
+		endp = str;
+		/* init mul */
+		e->mul = 1;
+	}
+	e->iopar = create_iopar(endp);
+	e->value = NAN;
+}
+
 /* main */
 static int iotrace(int argc, char *argv[])
 {
 	int opt, j, changed;
-	char *endp;
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
@@ -231,24 +273,35 @@ static int iotrace(int argc, char *argv[])
 	}
 	s.fmt = argv[optind++];
 
-	/* pre-allocate arrays */
-	s.ne = argc - optind;
-	s.e = malloc(s.ne * sizeof(*s.e));
+	if (!strcmp(s.fmt, "-")) {
+		int resargs;
+		char *arg;
 
-	/* parse iopar arguments */
-	for (j = 0; optind < argc; ++optind, ++j) {
-		s.e[j].mul = strtod(argv[optind], &endp);
-		if ((endp > argv[optind]) && (*endp == '*')) {
-			/* skip '*' */
-			++endp;
-		} else {
-			/* reset parser */
-			endp = argv[optind];
-			/* init mul */
-			s.e[j].mul = 1;
+		/* read parameters from stdin */
+		s.fmt = fetch_param_from_file(stdin);
+		if (!s.fmt) {
+			fputs(help_msg, stderr);
+			exit(1);
 		}
-		s.e[j].iopar = create_iopar(endp);
-		s.e[j].value = NAN;
+		/* allocate format string */
+		s.fmt = strdup(s.fmt);
+		/* fetch parameters */
+		resargs = 0;
+		do {
+			if (s.ne >= resargs)
+				s.e = realloc(s.e, (resargs += 16) * sizeof(*s.e));
+			arg = fetch_param_from_file(stdin);
+			if (arg)
+				parse_param(s.e + s.ne++, arg);
+		} while (arg);
+	} else {
+		/* pre-allocate arrays */
+		s.ne = argc - optind;
+		s.e = malloc(s.ne * sizeof(*s.e));
+
+		/* parse iopar arguments */
+		for (j = 0; optind < argc; ++optind, ++j)
+			parse_param(s.e+j, argv[optind]);
 	}
 
 	libio_set_trace(s.verbose);
