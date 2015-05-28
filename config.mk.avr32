@@ -1,9 +1,6 @@
 TRIPLET=avr32-linux-uclibc-
 CC=$(TRIPLET)gcc
 STRIP=$(TRIPLET)strip
-libio.a: libllist/llist.o libevt/libevt-timer.o libevt/libevt-fd.o libevt/libevt-common.o
 CFLAGS	= -Wall -g0 -Os
-CPPFLAGS+= -Ilibllist -Ilibevt
 #LDFLAGS = -static
-LDLIBS	= -lrt -lm
 #CFLAGS	= -nostdlib
