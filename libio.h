@@ -11,6 +11,9 @@ extern "C" {
 extern void elog(int prio, int errnum, const char *fmt, ...)
 	__attribute__((format(printf,3,4)));
 
+/* core loop */
+extern int libio_wait(void);
+
 /* GENERIC */
 extern void register_applet(const char *name, int (*fn)(int, char *[]));
 

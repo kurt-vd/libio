@@ -8,7 +8,28 @@
 #include <error.h>
 #include <sys/time.h>
 
+#include "lib/libt.h"
+#include "lib/libe.h"
 #include "_libio.h"
+
+int libio_wait(void)
+{
+	int ret;
+
+	libio_flush();
+	ret = libe_wait(libt_get_waittime());
+	if (ret < 0) {
+		if (errno != EINTR) {
+			elog(LOG_ERR, errno, "libio_wait");
+			return ret;
+		}
+		/* preset ret, to avoid exiting */
+		ret = 0;
+	} else
+		libe_flush();
+	libt_flush();
+	return ret;
+}
 
 void elog(int prio, int errnum, const char *fmt, ...)
 {
