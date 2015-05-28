@@ -6,7 +6,6 @@
 #include <error.h>
 #include <getopt.h>
 
-#include <libevt.h>
 #include "_libio.h"
 
 /* ARGUMENTS */
@@ -99,13 +98,8 @@ static int ioserver(int argc, char *argv[])
 				set_iopar(lnk->a, get_iopar(lnk->b));
 		}
 
-		libio_flush();
-		if (evt_loop(-1) < 0) {
-			if (errno == EINTR)
-				continue;
-			elog(LOG_ERR, errno, "evt_loop");
+		if (libio_wait() < 0)
 			break;
-		}
 	}
 	return 0;
 }

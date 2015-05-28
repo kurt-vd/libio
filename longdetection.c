@@ -6,7 +6,7 @@
 
 #include <error.h>
 
-#include <libevt.h>
+#include "lib/libt.h"
 #include "_libio.h"
 
 struct ld {
@@ -81,7 +81,7 @@ void set_longdet(int id, double value)
 	if (ld->instate == ivalue)
 		return;
 	if (ivalue) {
-		evt_add_timeout(ld->delay, longdetection_timeout, ld);
+		libt_add_timeout(ld->delay, longdetection_timeout, ld);
 	} else if (ld->instate) {
 		/* released */
 		if (ld->value == LONGPRESS) {
@@ -89,7 +89,7 @@ void set_longdet(int id, double value)
 			ld->value = 0;
 		} else {
 			/* raise short press event */
-			evt_remove_timeout(longdetection_timeout, ld);
+			libt_remove_timeout(longdetection_timeout, ld);
 			ld->value = SHORTPRESS;
 		}
 	}

@@ -4,7 +4,7 @@
 
 #include <error.h>
 
-#include <libevt.h>
+#include "lib/libt.h"
 #include "_libio.h"
 
 /* global data */
@@ -34,7 +34,7 @@ static void prn_virtual_state(int active_mask)
 			*str++ = (state & mask) ? 'x' : '-';
 	}
 	*str++ = 0;
-	printf("virtual %.3lf: %s\n", libevt_now(), buf);
+	printf("virtual %.3lf: %s\n", libt_now(), buf);
 }
 
 /* hooks */
@@ -104,7 +104,7 @@ static int set_virtual_teleruptor(struct iopar *iopar, double value)
 	ret = set_virtual(iopar, value);
 
 	if ((saved_state ^ state) & state & virt->mask)
-		evt_add_timeout(0.05, on_teleruptor, virt);
+		libt_add_timeout(0.05, on_teleruptor, virt);
 	return ret;
 }
 

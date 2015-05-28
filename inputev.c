@@ -10,7 +10,8 @@
 #include <linux/input.h>
 #include <sys/poll.h>
 
-#include <libevt.h>
+#include "lib/libt.h"
+#include "lib/libe.h"
 #include "_libio.h"
 
 #define NCODES	(KEY_MAX + 1)
@@ -105,7 +106,7 @@ static void free_inputdev(struct inputdev *dev)
 {
 	struct evbtn *btn;
 
-	evt_remove_fd(dev->fd);
+	libe_remove_fd(dev->fd);
 	close(dev->fd);
 	del_inputdev(dev);
 	/*
@@ -135,7 +136,7 @@ static void evbtn_newdata(struct evbtn *btn, const struct input_event *ev)
 		btn->iopar.value = ev->value;
 
 		if (btn->flags & FL_DEBOUNCE)
-			evt_add_timeout(debouncetime, evbtn_debounced, btn);
+			libt_add_timeout(debouncetime, evbtn_debounced, btn);
 		else
 			iopar_set_dirty(&btn->iopar);
 	}
@@ -210,7 +211,7 @@ static struct inputdev *lookup_inputdev(const char *spec)
 	read_inputdev(dev->fd, dev);
 
 	/* register */
-	evt_add_fd(dev->fd, read_inputdev, dev);
+	libe_add_fd(dev->fd, read_inputdev, dev);
 	add_inputdev(dev);
 found:
 	if (file)

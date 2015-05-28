@@ -8,7 +8,6 @@
 #include <error.h>
 
 #include "libio.h"
-#include <libevt.h>
 
 /* libio-related applets */
 
@@ -75,13 +74,8 @@ static int netiomsg_request(int argc, char *argv[])
 			}
 		}
 
-		libio_flush();
-		if (evt_loop(-1) < 0) {
-			if (errno == EINTR)
-				continue;
-			elog(LOG_ERR, errno, "evt_loop");
+		if (libio_wait() < 0)
 			break;
-		}
 	}
 	return 1;
 }

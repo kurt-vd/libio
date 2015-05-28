@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include <error.h>
 
-#include <libevt.h>
+#include "lib/libt.h"
 
 #include "_libio.h"
 
@@ -61,14 +61,14 @@ fail_open:
 static void applelight_timeout(void *data)
 {
 	applelight_read(data, 0);
-	evt_repeat_timeout(1, applelight_timeout, data);
+	libt_repeat_timeout(1, applelight_timeout, data);
 }
 
 static void del_applelight(struct iopar *iopar)
 {
 	struct applelight *al = (void *)iopar;
 
-	evt_remove_timeout(applelight_timeout, al);
+	libt_remove_timeout(applelight_timeout, al);
 	cleanup_libiopar(&al->iopar);
 	free(al);
 }
@@ -86,6 +86,6 @@ struct iopar *mkapplelight(char *sysfs)
 
 	/* read initial value & schedule next */
 	applelight_read(al, 1);
-	evt_add_timeout(1, applelight_timeout, al);
+	libt_add_timeout(1, applelight_timeout, al);
 	return &al->iopar;
 }

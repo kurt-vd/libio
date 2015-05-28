@@ -9,7 +9,7 @@
 #include <fcntl.h>
 #include <error.h>
 
-#include <libevt.h>
+#include "lib/libt.h"
 
 #include "_libio.h"
 
@@ -114,7 +114,7 @@ static void sysfspar_timeout(void *data)
 	struct sysfspar *sp = data;
 
 	sysfspar_read(sp, 0);
-	evt_repeat_timeout(sp->delay, sysfspar_timeout, sp);
+	libt_repeat_timeout(sp->delay, sysfspar_timeout, sp);
 }
 
 static int set_sysfspar(struct iopar *iopar, double value)
@@ -159,7 +159,7 @@ static void del_sysfspar(struct iopar *iopar)
 {
 	struct sysfspar *sp = (void *)iopar;
 
-	evt_remove_timeout(sysfspar_timeout, sp);
+	libt_remove_timeout(sysfspar_timeout, sp);
 	cleanup_libiopar(&sp->iopar);
 	free(sp);
 }
@@ -216,7 +216,7 @@ struct iopar *mksysfspar(char *spec)
 	if (!access(sp->sysfs, R_OK)) {
 		/* read repeatedly */
 		sysfspar_read(sp, 1);
-		evt_add_timeout(sp->delay, sysfspar_timeout, sp);
+		libt_add_timeout(sp->delay, sysfspar_timeout, sp);
 	}
 	return &sp->iopar;
 }

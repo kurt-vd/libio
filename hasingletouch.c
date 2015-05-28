@@ -6,7 +6,6 @@
 #include <error.h>
 #include <getopt.h>
 
-#include <libevt.h>
 #include "_libio.h"
 
 #define MAX_IN 3
@@ -129,13 +128,8 @@ static int hasingletouch(int argc, char *argv[])
 				value += set_iopar(lnk->out, value);
 		}
 
-		libio_flush();
-		if (evt_loop(-1) < 0) {
-			if (errno == EINTR)
-				continue;
-			elog(LOG_ERR, errno, "evt_loop");
+		if (libio_wait() < 0)
 			break;
-		}
 	}
 	return 0;
 }

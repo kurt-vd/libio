@@ -6,7 +6,7 @@
 #include <error.h>
 #include <getopt.h>
 
-#include <libevt.h>
+#include "lib/libt.h"
 #include "_libio.h"
 
 #define MAX_IN 3
@@ -183,10 +183,10 @@ static int hamotor(int argc, char *argv[])
 			if (!iopar_dirty(s.in[j])) {
 				/* nothing */
 			} else if (get_iopar(s.in[j]) > 0.5) {
-				evt_add_timeout(1, btn_down_timer, NULL);
+				libt_add_timeout(1, btn_down_timer, NULL);
 				break;
 			} else if (get_iopar(s.in[j]) < 0.5) {
-				evt_remove_timeout(btn_down_timer, NULL);
+				libt_remove_timeout(btn_down_timer, NULL);
 				short_press_event = !long_press_pending;
 				long_press_pending = 0;
 				break;
@@ -222,8 +222,8 @@ static int hamotor(int argc, char *argv[])
 		/* handle clicks */
 		if (long_press_event) {
 			/* deal with long-press timers */
-			evt_remove_timeout(motor_select_timer, NULL);
-			evt_add_timeout(5, motor_select_timer, NULL);
+			libt_remove_timeout(motor_select_timer, NULL);
+			libt_add_timeout(5, motor_select_timer, NULL);
 			s.current = s.current ? s.current->next : s.links;
 		}
 
@@ -244,13 +244,8 @@ static int hamotor(int argc, char *argv[])
 		}
 
 		long_press_event = short_press_event = 0;
-		libio_flush();
-		if (evt_loop(-1) < 0) {
-			if (errno == EINTR)
-				continue;
-			elog(LOG_WARNING, errno, "evt_loop");
+		if (libio_wait() < 0)
 			break;
-		}
 	}
 	return 0;
 }

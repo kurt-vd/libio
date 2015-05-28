@@ -7,7 +7,6 @@
 #include <error.h>
 #include <getopt.h>
 
-#include <libevt.h>
 #include "_libio.h"
 
 /* ARGUMENTS */
@@ -94,13 +93,8 @@ static int iotoggle(int argc, char *argv[])
 				elog(LOG_INFO, 0, "> %.3f", get_iopar(outdev));
 		}
 
-		libio_flush();
-		if (evt_loop(-1) < 0) {
-			if (errno == EINTR)
-				continue;
-			elog(LOG_ERR, errno, "evt_loop");
+		if (libio_wait() < 0)
 			break;
-		}
 	}
 	return 0;
 }

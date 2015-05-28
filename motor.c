@@ -7,7 +7,7 @@
 
 #include <error.h>
 
-#include <libevt.h>
+#include "lib/libt.h"
 #include "_libio.h"
 
 /* MOTOR TYPES */
@@ -103,7 +103,7 @@ static void motor_update_position(struct motor *mot)
 {
 	double currtime;
 
-	currtime = libevt_now();
+	currtime = libt_now();
 	if (motor_curr_speed(mot) != 0) {
 		mot->pospar.value +=
 			(motor_curr_speed(mot) * (currtime - mot->lasttime)) /
@@ -170,7 +170,7 @@ static inline double next_wakeup(struct motor *mot)
 	else
 		endpoint = (motor_curr_speed(mot) < 0) ? 0 : 1;
 
-	result = mot->lasttime + fabs(endpoint - motor_curr_position(mot))*mot->maxval - libevt_now();
+	result = mot->lasttime + fabs(endpoint - motor_curr_position(mot))*mot->maxval - libt_now();
 	/* optimization */
 	if (result <= UPDINT)
 		return result;
@@ -199,7 +199,7 @@ static void motor_handler(void *dat)
 			if (motor_curr_speed(mot) != 0) {
 				/* run 10% in 'post' mode */
 				mot->state = ST_POST;
-				evt_add_timeout(mot->maxval * 0.10, motor_handler, mot);
+				libt_add_timeout(mot->maxval * 0.10, motor_handler, mot);
 				return;
 			}
 		} else if (motor_curr_position(mot) < mot->setpoint) {
@@ -224,10 +224,10 @@ static void motor_handler(void *dat)
 			}
 		}
 		if (mot->state != ST_IDLE)
-			evt_add_timeout(next_wakeup(mot), motor_handler, mot);
+			libt_add_timeout(next_wakeup(mot), motor_handler, mot);
 		return;
 repeat:
-		evt_add_timeout(0.1, motor_handler, mot);
+		libt_add_timeout(0.1, motor_handler, mot);
 	} else {
 		/* DIR control */
 
@@ -238,7 +238,7 @@ repeat:
 			   ((mot->reqspeed > 0) && (motor_curr_position(mot) >= 1))) {
 			/* run 10% in 'post' mode */
 			mot->state = ST_POST;
-			evt_add_timeout(mot->maxval * 0.10, motor_handler, mot);
+			libt_add_timeout(mot->maxval * 0.10, motor_handler, mot);
 			return;
 		}
 
@@ -247,25 +247,25 @@ repeat:
 			/* reverse direction, wait a bit */
 			if (change_motor_speed(mot, 0) < 0) {
 				/* repeat */
-				evt_add_timeout(0.1, motor_handler, mot);
+				libt_add_timeout(0.1, motor_handler, mot);
 				return;
 			}
 		} else if (fabs(oldspeed - mot->reqspeed) > 0.01) {
 			/* speed must change */
 			if (change_motor_speed(mot, mot->reqspeed) < 0) {
 				/* repeat */
-				evt_add_timeout(0.1, motor_handler, mot);
+				libt_add_timeout(0.1, motor_handler, mot);
 				return;
 			}
 		}
 
 		if (motor_curr_speed(mot) != 0) {
 			mot->state = ST_BUSY;
-			evt_add_timeout(next_wakeup(mot), motor_handler, mot);
+			libt_add_timeout(next_wakeup(mot), motor_handler, mot);
 		} else if (oldspeed != 0) {
 			/* go into cooldown state for a bit */
 			mot->state = ST_WAIT;
-			evt_add_timeout(next_wakeup(mot), motor_handler, mot);
+			libt_add_timeout(next_wakeup(mot), motor_handler, mot);
 		} else
 			mot->state = ST_IDLE;
 	}

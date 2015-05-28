@@ -8,7 +8,6 @@
 #include <error.h>
 #include <getopt.h>
 
-#include <libevt.h>
 #include "libio.h"
 
 /* ARGUMENTS */
@@ -126,13 +125,8 @@ static int ioprobe(int argc, char *argv[])
 		}
 
 		/* enter sleep */
-		libio_flush();
-		if (evt_loop(-1) < 0) {
-			if (errno == EINTR)
-				continue;
-			elog(LOG_ERR, errno, "evt_loop");
+		if (libio_wait() < 0)
 			break;
-		}
 	}
 	return 0;
 }

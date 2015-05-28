@@ -7,7 +7,7 @@ PREFIX	= /usr/local
 CFLAGS	= -Wall -g3 -O0
 CPPFLAGS= -D_GNU_SOURCE
 LDFLAGS =
-LDLIBS	= -levt -lllist -lm -lrt
+LDLIBS	= -lm -lrt
 STRIP	= strip
 
 -include config.mk

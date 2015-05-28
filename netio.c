@@ -13,7 +13,8 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#include <libevt.h>
+#include "lib/libe.h"
+#include "lib/libt.h"
 #include "_libio.h"
 
 #define netiomsg_ignored "##ignored"
@@ -242,7 +243,7 @@ static void netio_keepalive(void *dat)
 						&remote->name.sa, remote->namelen);
 		}
 	}
-	evt_add_timeout(NETIO_PINGTIME, netio_keepalive, dat);
+	libt_add_timeout(NETIO_PINGTIME, netio_keepalive, dat);
 }
 
 static void netio_schedule_keepalive(void)
@@ -250,7 +251,7 @@ static void netio_schedule_keepalive(void)
 	static int netio_keepalive_scheduled;
 
 	if (!netio_keepalive_scheduled)
-		evt_add_timeout(NETIO_PINGTIME, netio_keepalive, NULL);
+		libt_add_timeout(NETIO_PINGTIME, netio_keepalive, NULL);
 	netio_keepalive_scheduled = 1;
 }
 
@@ -306,7 +307,7 @@ static void read_iosocket(int fd, void *data)
 	namelen = sizeof(name);
 	recvlen = ret = recvfrom(fd, pktbuf, NETIO_MTU, 0, &name.sa, &namelen);
 	if (ret < 0) {
-		evt_remove_fd(fd);
+		libe_remove_fd(fd);
 		close(fd);
 		/* TODO: proper cleanup */
 		return;
@@ -325,7 +326,7 @@ static void read_iosocket(int fd, void *data)
 		memcpy(&remote->name, &name, namelen);
 		remote->namelen = namelen;
 		add_ioremote(remote, sk);
-		evt_add_timeout(2*NETIO_PINGTIME, netio_lost_remote, remote);
+		libt_add_timeout(2*NETIO_PINGTIME, netio_lost_remote, remote);
 	}
 
 	/* parse packet */
@@ -341,14 +342,14 @@ static void read_iosocket(int fd, void *data)
 				if (!(sk->flags & FL_MYPUBLIC_SOCK))
 					/* postpone destruction for the remotes
 					   on the subscribing side */
-					evt_add_timeout(2*NETIO_PINGTIME,
+					libt_add_timeout(2*NETIO_PINGTIME,
 							netio_lost_remote, remote);
 			} else if (!strncmp(tok, "*subscribe", 8)) {
 				if (!(sk->flags & FL_MYPUBLIC_SOCK)) {
 					elog(LOG_WARNING, 0, "subscriber via client socket");
 					continue;
 				}
-				evt_add_timeout(2*NETIO_PINGTIME,
+				libt_add_timeout(2*NETIO_PINGTIME,
 						netio_lost_remote, remote);
 				/* mark this as consumer (= send data) */
 				remote->flags |= FL_SENDTO;
@@ -469,7 +470,7 @@ static int netio_autobind(int family)
 	/* manage socket */
 	iosock = zalloc(sizeof(*iosock));
 	iosock->fd = sk;
-	evt_add_fd(sk, read_iosocket, iosock);
+	libe_add_fd(sk, read_iosocket, iosock);
 	iosockets[name.sa.sa_family] = iosock;
 	netio_schedule_keepalive();
 	return sk;
@@ -530,7 +531,7 @@ int libio_bind_net(const char *uri)
 	iosock = zalloc(sizeof(*iosock));
 	iosock->fd = sk;
 	iosock->flags |= FL_MYPUBLIC_SOCK;
-	evt_add_fd(sk, read_iosocket, iosock);
+	libe_add_fd(sk, read_iosocket, iosock);
 	pubsockets[name.sa.sa_family] = iosock;
 	netio_schedule_keepalive();
 	return sk;
@@ -638,7 +639,7 @@ static struct iopar *mknetioremote(const char *uri, int family)
 			free(remote);
 			goto fail_subscribe;
 		}
-		evt_add_timeout(2*NETIO_PINGTIME, netio_lost_remote, remote);
+		libt_add_timeout(2*NETIO_PINGTIME, netio_lost_remote, remote);
 	}
 
 	add_sockparam(par, remote);

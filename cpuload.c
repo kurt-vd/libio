@@ -7,7 +7,7 @@
 
 #include <getopt.h>
 
-#include <libevt.h>
+#include "lib/libt.h"
 #include "_libio.h"
 
 /* create an index that is not -1, but is way beyond a possible #cpus */
@@ -203,7 +203,7 @@ static void cpu_timer(void *data)
 	}
 
 	/* schedule next */
-	evt_repeat_timeout(1, cpu_timer, data);
+	libt_add_timeout(1, cpu_timer, data);
 }
 
 /* CPU parameters */
@@ -221,7 +221,7 @@ static void del_cpupar(struct iopar *iopar)
 
 	/* remove timer on last cpu */
 	if (!cpupars)
-		evt_remove_timeout(cpu_timer, NULL);
+		libt_remove_timeout(cpu_timer, NULL);
 	cleanup_libiopar(&cp->iopar);
 	free(cp);
 }

@@ -6,7 +6,7 @@
 
 #include <error.h>
 
-#include <libevt.h>
+#include "lib/libt.h"
 #include "_libio.h"
 
 struct tr {
@@ -62,14 +62,14 @@ static void teleruptor_handler(void *dat)
 	case ST_IDLE:
 		/* activate teleruptor */
 		set_iopar(tr->out, 1);
-		evt_add_timeout(0.200, teleruptor_handler, tr);
+		libt_add_timeout(0.200, teleruptor_handler, tr);
 		tr->state = ST_SET;
 		++tr->retries;
 		break;
 	case ST_SET:
 		/* release teleruptor */
 		set_iopar(tr->out, 0);
-		evt_add_timeout(0.200, teleruptor_handler, tr);
+		libt_add_timeout(0.200, teleruptor_handler, tr);
 
 		teleruptor_update(tr);
 		tr->state = ST_WAIT;
