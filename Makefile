@@ -23,7 +23,8 @@ libio.a: libio.o led.o inputev.o netio.o sysfspar.o \
 	cpuload.o \
 	applelight.o \
 	motor.o \
-	teleruptor.o
+	teleruptor.o \
+	lib/libt.o lib/libe.o
 	@echo " AR $@"
 	@ar crs $@ $^
 
@@ -39,7 +40,7 @@ io: io.o iofollow.o ioserver.o ioprobe.o iotoggle.o \
 	@$(CC) -o $@ -DNAME=\"$@\" $(LDFLAGS) $^ $(LDLIBS)
 
 clean:
-	rm -f libio.a $(PROGS) $(wildcard *.o libllist/*.o libevt/*.o)
+	rm -f libio.a $(PROGS) $(wildcard *.o lib/*.o)
 
 install: $(PROGS)
 	install --strip-program=$(STRIP) -v -s $^ $(DESTDIR)$(PREFIX)/bin
