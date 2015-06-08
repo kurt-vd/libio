@@ -319,6 +319,7 @@ static int ha2addons(int argc, char *argv[])
 
 		if (btnpushed(s.poets)) {
 			if (active(s.main) || active(s.lavabo) ||
+					active(s.blueled) ||
 					active(s.bad) || active(s.hal)) {
 				/* turn a lot off */
 				set_iopar(s.led, 0);
