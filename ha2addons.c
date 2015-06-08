@@ -342,6 +342,14 @@ static int ha2addons(int argc, char *argv[])
 		/* reset zolder light */
 		schedule_output_reset_timer(s.zolder, 2 HOUR);
 
+		if (iopar_dirty(s.led) && (get_iopar(s.led) > 0.01) &&
+					(get_iopar(s.led) < 0.99))
+			/* set timeout when dimmed */
+			libt_add_timeout(2 HOUR, output_timeout, (void *)(long)s.led);
+		else if (iopar_dirty(s.led))
+			/* reset led timeout when (changed) not dimmed */
+			libt_remove_timeout(output_timeout, (void *)(long)s.led);
+
 		if (libio_wait() < 0)
 			break;
 	}
