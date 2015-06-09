@@ -98,11 +98,42 @@ static time_t strtolocaltime(const char *str, char **endp)
 	return mktime(&tm);
 }
 
+static const char *secstohuman(unsigned int secs)
+{
+	static char buf[128];
+	char *str = buf;
+	unsigned int div, width = 0;
+
+	div = secs / 86400;
+	secs %= 86400;
+	if (div) {
+		str += sprintf(str, "%0*ud ", width, div);
+		width = 2;
+	}
+	div = secs / 3600;
+	secs %= 3600;
+	if (div || (width && secs)) {
+		str += sprintf(str, "%0*uh", width, div);
+		width = 2;
+	}
+	div = secs / 60;
+	secs %= 60;
+	if (div || (width && secs)) {
+		str += sprintf(str, "%0*um", width, div);
+		width = 2;
+	}
+	if (secs || !width)
+		str += sprintf(str, "%0*us", width, div);
+
+	return buf;
+}
+
 int suntellposition(int argc, char *argv[])
 {
 	int opt, ret;
 	time_t t = time(0);
 	double lat, lon, incl, azim;
+	unsigned int secs_to_sunupdown;
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
@@ -135,11 +166,13 @@ int suntellposition(int argc, char *argv[])
 		t = strtolocaltime(argv[optind+2], NULL);
 	printf("time %s", ctime(&t));
 
-	ret = where_is_the_sun(t, lat, lon, &incl, &azim);
+	ret = sungetpos(t, lat, lon, &incl, &azim, &secs_to_sunupdown);
 	if (ret < 0)
 		elog(LOG_CRIT, 0, "failed");
 
 	printf("incl\t%.3lf\nazimuth\t%.3lf\n", incl, azim);
+	printf("next-%s\t%s\n", (incl < 0) ? "up" : "down",
+			secstohuman(secs_to_sunupdown));
 	return 0;
 }
 
