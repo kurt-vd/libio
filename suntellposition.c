@@ -15,7 +15,7 @@
 /* ARGUMENTS */
 static const char help_msg[] =
 	NAME ": calculate the sun's position based on GPS coordinates & date/time\n"
-	"Usage: " NAME " [OPTIONS] LAT LON [DATETIME]\n"
+	"Usage: " NAME " [OPTIONS] [LAT LON] [DATETIME]\n"
 	"\n"
 	"Options:\n"
 	" -V, --version		Show version\n"
@@ -160,11 +160,13 @@ int suntellposition(int argc, char *argv[])
 	} else {
 		lat = strtod(argv[optind], 0);
 		lon = strtod(argv[optind+1], 0);
+		optind += 2;
 	}
 
-	if (optind+3 <= argc)
-		t = strtolocaltime(argv[optind+2], NULL);
+	if (optind < argc)
+		t = strtolocaltime(argv[optind], NULL);
 	printf("time %s", ctime(&t));
+	printf("lat %lf\nlon %lf\n", lat, lon);
 
 	ret = sungetpos(t, lat, lon, &incl, &azim, &secs_to_sunupdown);
 	if (ret < 0)
