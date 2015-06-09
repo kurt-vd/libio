@@ -7,8 +7,16 @@
 extern "C" {
 #endif
 
-extern int where_is_the_sun(time_t now, double north, double east,
-		double *pincl, double *pazimuth);
+extern int sungetpos(time_t now, double north, double east,
+		double *pincl, double *pazimuth,
+		unsigned int *secs_to_sunupdown);
+
+/* legacy function */
+static inline int where_is_the_sun(time_t now, double north, double east,
+		double *pincl, double *pazimuth)
+{
+	return sungetpos(now, north, east, pincl, pazimuth, NULL);
+}
 
 #ifdef __cplusplus
 }

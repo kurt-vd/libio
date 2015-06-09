@@ -9,8 +9,9 @@
 
 #define KEERKRING  23.45
 
-int where_is_the_sun(time_t now, double north, double east,
-		double *pincl, double *pazimuth)
+int sungetpos(time_t now, double north, double east,
+		double *pincl, double *pazimuth,
+		unsigned int *secs_to_sunupdown)
 {
 	double pyear, pday;
 	double incl, azimuth;
@@ -73,6 +74,36 @@ int where_is_the_sun(time_t now, double north, double east,
 	 */
 	real_eq = sin(2.0 * M_PI * pyear) * KEERKRING;
 	incl = incl * ((90.0 - fabs(north))/90.0) + real_eq;
+
+	/* find next zero-crossing */
+	/* > sin(2*PI*pday)*90*(90-fabs(N))/90 + real_eq = 0
+	 * > sin(2*PI*pday) = -real_eq/(90-fabs(N))
+	 * > 2*PI*pday = asin(-real_eq/(90-fabs(N)))
+	 * > pday = asin(-real_eq/(90-fabs(N)))/2*PI
+	 */
+	if (secs_to_sunupdown) {
+		double nullpday, nullpday2, nextnull;
+		double nullincl;
+
+		nullincl = -real_eq/(90-fabs(north));
+		nullpday = asin(nullincl)/(2*M_PI);
+		/* nullpday range: -0.25..+0.25 */
+
+		/* nullpday (0..1) is the point in the day (6h..12h..18h..24h..)
+		 * where the sun crosses the horizon
+		 * nullpday2 is the opposite
+		 */
+		nullpday2 = 1-(nullpday+0.25) - 0.25;
+		if (nullpday < pday)
+			nullpday += 1;
+		if (nullpday2 < pday)
+			nullpday2 += 1;
+		nextnull = (nullpday < nullpday2) ? nullpday : nullpday2;
+		if (isnan(nextnull))
+			*secs_to_sunupdown = 86400;
+		else
+		*secs_to_sunupdown = (nextnull - pday) * 86400;
+	}
 	
 	/* get "azimuth" (0=N/S, 90=E, 180=S/N, 270=W) */
 	azimuth = 360 + 90 - (pday * 360);
