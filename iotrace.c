@@ -7,7 +7,9 @@
 
 #include <unistd.h>
 #include <getopt.h>
+#ifdef HAVE_IFADDRS
 #include <ifaddrs.h>
+#endif
 #include <sys/socket.h>
 #include <linux/if.h>
 #include <arpa/inet.h>
@@ -64,6 +66,7 @@ static struct args {
 	const char *fmt;
 } s;
 
+#ifdef HAVE_IFADDRS
 /* cached ifaddrs table */
 static struct ifaddrs *ifa_table;
 
@@ -120,6 +123,7 @@ static const char *netdevstr(const char *iface)
 done:
 	return buf;
 }
+#endif
 
 static int myprint(FILE *fp, const char *fmt)
 {
@@ -156,6 +160,7 @@ static int myprint(FILE *fp, const char *fmt)
 			fmt += 5;
 			continue;
 		}
+#ifdef HAVE_IFADDRS
 		if (!strncmp(fmt, "%net(", 5)) {
 			const char *str;
 			char ifname[IFNAMSIZ+1] = {};
@@ -171,6 +176,7 @@ static int myprint(FILE *fp, const char *fmt)
 			fputs(netdevstr(ifname), fp);
 			continue;
 		}
+#endif
 		/* put number */
 		str = strchr(fmt, 'f');
 		if (!str) {
@@ -195,10 +201,12 @@ static int myprint(FILE *fp, const char *fmt)
 		fputs(strbuf, fp);
 		result += strlen(strbuf);
 	}
+#ifdef HAVE_IFADDRS
 	if (ifa_table) {
 		freeifaddrs(ifa_table);
 		ifa_table = NULL;
 	}
+#endif
 	return result;
 }
 

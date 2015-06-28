@@ -2,5 +2,6 @@ TRIPLET=
 CC=$(TRIPLET)gcc
 STRIP=$(TRIPLET)strip
 CFLAGS	= -Wall -g0 -Os
+CPPFLAGS += -DHAVE_IFADDRS
 #LDFLAGS = -static
 #CFLAGS	= -nostdlib
