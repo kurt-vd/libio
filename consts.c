@@ -4,8 +4,6 @@
 #include <errno.h>
 #include <math.h>
 
-#include <error.h>
-
 #include "_libio.h"
 
 struct lookup {

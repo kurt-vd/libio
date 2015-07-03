@@ -3,7 +3,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include <error.h>
 #include <getopt.h>
 
 #include "lib/libt.h"

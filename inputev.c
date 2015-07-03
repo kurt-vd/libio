@@ -6,9 +6,8 @@
 
 #include <unistd.h>
 #include <fcntl.h>
-#include <error.h>
 #include <linux/input.h>
-#include <sys/poll.h>
+#include <poll.h>
 
 #include "lib/libt.h"
 #include "lib/libe.h"

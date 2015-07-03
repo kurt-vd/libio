@@ -5,8 +5,6 @@
 #include <errno.h>
 #include <math.h>
 
-#include <error.h>
-
 #include "lib/libt.h"
 #include "_libio.h"
 

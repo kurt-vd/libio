@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#include <error.h>
 #include <sys/time.h>
 
 #include "lib/libt.h"

@@ -3,8 +3,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include <error.h>
-
 #include "_libio.h"
 
 struct lookup {

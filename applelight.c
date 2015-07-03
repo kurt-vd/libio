@@ -6,7 +6,6 @@
 
 #include <unistd.h>
 #include <fcntl.h>
-#include <error.h>
 
 #include "lib/libt.h"
 

@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <error.h>
-
 #include "lib/libt.h"
 #include "_libio.h"
 
