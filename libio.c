@@ -84,12 +84,12 @@ int strlookup(const char *str, const char *const table[])
 static char *subopt_value;
 static char *subopt_haystack;
 
-const char *mygetsuboptvalue(void)
+char *mygetsuboptvalue(void)
 {
 	return subopt_value;
 }
 
-const char *mygetsubopt(char *haystack)
+char *mygetsubopt(char *haystack)
 {
 	char *key = haystack ?: subopt_haystack;
 

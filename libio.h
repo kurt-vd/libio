@@ -32,8 +32,8 @@ extern int strlookup(const char *str, const char *const table[]);
  * mygetsubopt returns 'name', 'color', 'tall'
  * and puts 'horse', 'gray', NULL in *value
  */
-extern const char *mygetsubopt(char *key);
-extern const char *mygetsuboptvalue(void);
+extern char *mygetsubopt(char *key);
+extern char *mygetsuboptvalue(void);
 
 /* sysfs (or any other file) iface */
 extern int attr_read(int default_value, const char *fmt, ...)
