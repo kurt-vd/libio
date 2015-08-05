@@ -24,6 +24,7 @@ libio.a: libio.o led.o inputev.o netio.o sysfspar.o \
 	applelight.o \
 	motor.o \
 	teleruptor.o \
+	battery.o \
 	lib/libt.o lib/libe.o
 	@echo " AR $@"
 	@ar crs $@ $^

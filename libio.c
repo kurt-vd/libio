@@ -183,6 +183,7 @@ static const struct {
 	{ "sysfs", mksysfspar, },
 	{ "led", mkled, },
 	{ "backlight", mkbacklight, },
+	{ "battery", mkbatterypar, },
 	{ "in", mkinputevbtn, },
 	{ "button", mkinputevbtn, },
 	{ "kbd", mkinputevbtn, },

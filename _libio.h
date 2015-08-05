@@ -68,6 +68,7 @@ extern struct iopar *mkshared(char *cstr);
 extern struct iopar *mksysfspar(char *str);
 extern struct iopar *mkled(char *str);
 extern struct iopar *mkbacklight(char *str);
+extern struct iopar *mkbatterypar(char *spec);
 extern struct iopar *mkinputevbtn(char *str);
 extern struct iopar *mkapplelight(char *sysfs);
 extern struct iopar *mkcpupar(char *sysfs);
