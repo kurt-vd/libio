@@ -104,28 +104,53 @@ char *mygetsubopt(char *haystack)
 	return key;
 }
 
+static const char *vattr_reads(const char *fmt, va_list va)
+{
+	FILE *fp;
+	char *file;
+	static char *line;
+	static size_t linesize;
+	int ret;
+
+	vasprintf(&file, fmt, va);
+
+	fp = fopen(file, "r");
+	if (!fp) {
+		free(file);
+		return NULL;
+	}
+	ret = getline(&line, &linesize, fp);
+	fclose(fp);
+	free(file);
+	return (ret < 0) ? NULL : line;
+}
+
+const char *attr_reads(const char *fmt, ...)
+{
+	va_list va;
+	const char *result;
+
+	va_start(va, fmt);
+	result = vattr_reads(fmt, va);
+	va_end(va);
+	return result;
+}
+
 /* */
 int attr_read(int default_value, const char *fmt, ...)
 {
-	FILE *fp;
-	int value;
-	char *file;
 	va_list va;
+	const char *result;
 
 	va_start(va, fmt);
-	vasprintf(&file, fmt, va);
+	result = vattr_reads(fmt, va);
 	va_end(va);
 
-	fp = fopen(file, "r");
-	if (fp) {
-		fscanf(fp, "%i", &value);
-		fclose(fp);
-	} else {
-		elog(LOG_WARNING, errno, "fopen %s r", file);
-		value = default_value;
+	if (!result) {
+		elog(LOG_WARNING, errno, "fopen %s r", fmt);
+		return default_value;
 	}
-	free(file);
-	return value;
+	return strtol(result, NULL, 0);
 }
 
 int attr_write(int value, const char *fmt, ...)

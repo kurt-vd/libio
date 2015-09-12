@@ -36,6 +36,8 @@ extern char *mygetsubopt(char *key);
 extern char *mygetsuboptvalue(void);
 
 /* sysfs (or any other file) iface */
+extern const char *attr_reads(const char *fmt, ...)
+	__attribute__((format(printf,1,2)));
 extern int attr_read(int default_value, const char *fmt, ...)
 	__attribute__((format(printf,2,3)));
 extern int attr_write(int value, const char *fmt, ...)
