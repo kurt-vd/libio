@@ -15,6 +15,7 @@
 #include <arpa/inet.h>
 
 #include "_libio.h"
+#include "lib/libt.h"
 
 /* ARGUMENTS */
 static const char help_msg[] =
@@ -177,6 +178,21 @@ static int myprint(FILE *fp, const char *fmt)
 			continue;
 		}
 #endif
+		if (!strncmp(fmt, "%bat(", 5)) {
+			const char *str;
+			char batname[32+1] = {};
+
+			fmt += 5;
+			str = strchr(fmt, ')');
+			if ((str - fmt) >= sizeof(batname))
+				elog(LOG_CRIT, 0, "battery name too long '%.*s'",
+						(int)(str - fmt), fmt);
+			strncpy(batname, fmt, str - fmt);
+			fmt = str+1;
+
+			fputs(batterystr(batname), fp);
+			continue;
+		}
 		/* put number */
 		str = strchr(fmt, 'f');
 		if (!str) {
@@ -248,10 +264,15 @@ static void parse_param(struct ent *e, char *str)
 	e->value = NAN;
 }
 
+static void trace_timeout(void *dat)
+{
+	libt_add_timeout(1.1, trace_timeout, dat);
+}
+
 /* main */
 static int iotrace(int argc, char *argv[])
 {
-	int opt, j, changed;
+	int opt, j;
 
 	while ((opt = getopt_long(argc, argv, optstring, long_opts, NULL)) != -1)
 	switch (opt) {
@@ -312,6 +333,7 @@ static int iotrace(int argc, char *argv[])
 	}
 
 	libio_set_trace(s.verbose);
+	libt_add_timeout(1.1, trace_timeout, NULL);
 	/* main ... */
 	while (1) {
 		/* netio msgs */
@@ -320,19 +342,14 @@ static int iotrace(int argc, char *argv[])
 			fflush(stdout);
 		}
 
-		changed = 0;
 		for (j = 0; j < s.ne; ++j) {
-			if (iopar_dirty(s.e[j].iopar)) {
-				++changed;
+			if (iopar_dirty(s.e[j].iopar))
 				s.e[j].value = get_iopar(s.e[j].iopar);
-			}
 		}
 
-		if (changed) {
-			myprint(stdout, s.fmt);
-			fputc('\n', stdout);
-			fflush(stdout);
-		}
+		myprint(stdout, s.fmt);
+		fputc('\n', stdout);
+		fflush(stdout);
 
 		/* common libio stuff */
 		if (libio_wait() < 0)
