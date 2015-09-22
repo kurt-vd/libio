@@ -178,21 +178,6 @@ static int myprint(FILE *fp, const char *fmt)
 			continue;
 		}
 #endif
-		if (!strncmp(fmt, "%bat(", 5)) {
-			const char *str;
-			char batname[32+1] = {};
-
-			fmt += 5;
-			str = strchr(fmt, ')');
-			if ((str - fmt) >= sizeof(batname))
-				elog(LOG_CRIT, 0, "battery name too long '%.*s'",
-						(int)(str - fmt), fmt);
-			strncpy(batname, fmt, str - fmt);
-			fmt = str+1;
-
-			fputs(batterystr(batname), fp);
-			continue;
-		}
 		/* put number */
 		str = strchr(fmt, 'f');
 		if (!str) {
