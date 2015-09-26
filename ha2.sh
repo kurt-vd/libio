@@ -27,15 +27,7 @@ fancy)
 	exec io ha2addons -l unix:@ha2+
 	;;
 abort)
-	exec io haspawn -d2 SW1 "$0" poweroff
-	;;
-poweroff)
-	# set blinking timer
-	echo timer > $POWERLED/trigger
-	echo 100 > $POWERLED/delay_on
-	echo 100 > $POWERLED/delay_off
-
-	exec poweroff
+	exec io haspawn -d2 SW1 poweroff
 	;;
 *)
 	echo "usage: $0 [`$0 services`]"
