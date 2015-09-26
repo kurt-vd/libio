@@ -115,6 +115,17 @@ static inline void set_longdet_btns(int longdet, const int *iopars, int niopars)
 	}
 }
 
+/* get time of day */
+static double tod(void)
+{
+	time_t now;
+	struct tm tm;
+
+	time(&now);
+	tm = *localtime(&now);
+	return tm.tm_hour + (tm.tm_min / 60) + (tm.tm_sec / 3600);
+}
+
 static inline int lavabo_dimmed(void)
 {
 	/* test manual overrule */
@@ -134,13 +145,7 @@ static inline int lavabo_dimmed(void)
 			return 1;
 	} else if (strstr(s.dim, "time")) {
 		/* time based */
-		time_t now;
-		struct tm tm;
-		double hours;
-
-		time(&now);
-		tm = *localtime(&now);
-		hours = tm.tm_hour + (tm.tm_min / 60) + (tm.tm_sec / 3600);
+		double hours = tod();
 
 		return !((hours >= s.hopstaan) && (hours <= s.hslapen));
 	}
