@@ -53,6 +53,8 @@ struct motor {
 	int out1, out2;
 	int flags;
 		#define INV2	2 /* invert out2 driving, for 'godir' */
+		#define EOL0	4 /* wait ST_POST near 0 */
+		#define EOL1	8 /* wait ST_POST near 1 */
 
 	/* direction control */
 	struct iopar dirpar;
@@ -196,11 +198,23 @@ static void motor_handler(void *dat)
 			goto repeat;
 		mot->state = ST_WAIT;
 	} else if ((motor_curr_speed(mot) < 0) && (motor_curr_position(mot) <= 0.01)) {
-		/* run 10% in 'post' mode */
-		mot->state = ST_POST;
+		if (mot->flags & EOL0)
+			/* run 10% in 'post' mode */
+			mot->state = ST_POST;
+		else {
+			if (change_motor_speed(mot, 0) < 0)
+				goto repeat;
+			mot->state = ST_WAIT;
+		}
 	} else if ((motor_curr_speed(mot) > 0) && (motor_curr_position(mot) >= 0.99)) {
-		/* run 10% in 'post' mode */
-		mot->state = ST_POST;
+		if (mot->flags & EOL1)
+			/* run 10% in 'post' mode */
+			mot->state = ST_POST;
+		else {
+			if (change_motor_speed(mot, 0) < 0)
+				goto repeat;
+			mot->state = ST_WAIT;
+		}
 	} else if (mot->ctrltype == CTRL_POS) {
 		if (motor_curr_position(mot) < (mot->setpoint - 0.01)) {
 			if (motor_curr_speed(mot) < 0) {
@@ -334,6 +348,7 @@ struct iopar *mkmotordir(char *str)
 	int ntok;
 
 	mot = zalloc(sizeof(*mot));
+	mot->flags = EOL0 | EOL1;
 	mot->dirpar.del = del_motor_dir;
 	mot->dirpar.set = set_motor_dir;
 	mot->dirpar.value = 0;
@@ -342,7 +357,7 @@ struct iopar *mkmotordir(char *str)
 	mot->pospar.set = set_motor_pos;
 	mot->pospar.value = 0;
 
-	for (ntok = 0, tok = strtok_r(str, "+", &saved); tok; ++ntok, tok = strtok_r(NULL, "+", &saved))
+	for (ntok = 0, tok = strtok_r(str, "+", &saved); tok && (ntok < 4); ++ntok, tok = strtok_r(NULL, "+", &saved))
 	switch (ntok) {
 	case 0:
 		mot->type = lookup_motor_type(tok);
@@ -372,13 +387,21 @@ struct iopar *mkmotordir(char *str)
 	case 3:
 		mot->maxval = strtod(tok, NULL);
 		break;
-	default:
-		break;
 	}
+
 	if (ntok < 4) {
-		elog(LOG_ERR, 0, "%s: need arguments \"[MOTORTYPE(updown|godir)]+OUT1+[/]OUT2+MAXVAL\"", __func__);
+		elog(LOG_ERR, 0, "%s: need arguments \"[MOTORTYPE(updown|godir)]+OUT1+[/]OUT2+MAXVAL[+eol0,eol1,noeol]\"", __func__);
 		goto fail_config;
 	}
+
+	for (tok = mygetsubopt(saved); tok; tok = mygetsubopt(NULL))
+	if (!strcmp("eol0", tok))
+		mot->flags = (mot->flags & ~EOL1) | EOL0;
+	else if (!strcmp("eol1", tok))
+		mot->flags = (mot->flags & ~EOL0) | EOL1;
+	else if (!strcmp("noeol", tok))
+		mot->flags &= ~(EOL0| EOL1);
+
 	/* fixups */
 	if (mot->type == TYPE_UPDOWN)
 		/* INV2 makes no sense for updown control */
