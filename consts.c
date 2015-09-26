@@ -11,7 +11,6 @@ struct lookup {
 
 	char *key;
 	char *value;
-	double fvalue;
 	char buf[2];
 };
 
@@ -21,33 +20,21 @@ static struct {
 	int loaded;
 } s;
 
-static struct lookup *add_entry(const char *key, const char *value)
+static double todouble(const char *value)
 {
-	struct lookup *ptr;
 	char *endp;
+	double result;
 
-	/* create entry */
-	ptr = zalloc(sizeof(*ptr) + strlen(key) + strlen(value?:"") + 2);
-	strcpy(ptr->buf, key);
-	ptr->key = ptr->buf;
-	if (value) {
-		ptr->value = ptr->key + strlen(ptr->key) + 1;
-		strcpy(ptr->value, value);
-		ptr->fvalue = strtod(ptr->value, &endp);
-		/* parse H:M:S */
-		if (*endp == ':') {
-			ptr->fvalue += strtod(endp+1, &endp) /60;
-			if (*endp == ':')
-				ptr->fvalue += strtod(endp+1, &endp) /3600;
-		}
+	result = strtod(value, &endp);
+	if (endp <= value)
+		return NAN;
+	/* parse H:M:S */
+	if (*endp == ':') {
+		result += strtod(endp+1, &endp) /60;
+		if (*endp == ':')
+			result += strtod(endp+1, &endp) /3600;
 	}
-	/* add in linked list */
-	if (s.last)
-		s.last->next = ptr;
-	s.last = ptr;
-	if (!s.first)
-		s.first = ptr;
-	return ptr;
+	return result;
 }
 
 /* load consts of 1 named file */
@@ -57,6 +44,7 @@ static void load_consts_file(const char *file)
 	int ret, linenr = 0;
 	char *line = NULL, *key, *value;
 	size_t linesize = 0;
+	struct lookup *ptr;
 
 	fp = fopen(file, "r");
 	if (!fp) {
@@ -88,7 +76,17 @@ static void load_consts_file(const char *file)
 			continue;
 		}
 		/* create entry */
-		add_entry(key, value);
+		ptr = zalloc(sizeof(*ptr) + ret);
+		strcpy(ptr->buf, key);
+		ptr->key = ptr->buf;
+		ptr->value = ptr->key + strlen(ptr->key) + 1;
+		strcpy(ptr->value, value);
+		/* add in linked list */
+		if (s.last)
+			s.last->next = ptr;
+		s.last = ptr;
+		if (!s.first)
+			s.first = ptr;
 
 		if (libio_trace >= 2)
 			fprintf(stderr, "%s: %s\t%s\n", file, key, value);
@@ -118,7 +116,7 @@ static void free_consts(void)
 	}
 }
 
-double libio_const(const char *name)
+const char *libio_strconst(const char *name)
 {
 	struct lookup *ptr;
 
@@ -127,12 +125,40 @@ double libio_const(const char *name)
 
 	for (ptr = s.first; ptr; ptr = ptr->next) {
 		if (!strcmp(name, ptr->key))
-			return ptr->fvalue;
+			return ptr->value;
 	}
 	/* warn, and add fake entry */
 	elog(LOG_NOTICE, 0, "%s '%s' not found", __func__, name);
-	add_entry(name, "nan");
-	return NAN;
+	return NULL;
+}
+
+double libio_const(const char *name)
+{
+	return todouble(libio_strconst(name));
+}
+
+struct iopar *mkpreset(char *str)
+{
+	const char *value;
+	struct iopar *par;
+	static int recurr; /* protect endless loops */
+
+	if (!s.loaded)
+		load_consts();
+	if (++recurr > 10) {
+		--recurr;
+		elog(LOG_NOTICE, 0, "%s: max. nesting reached, are you looping?", __func__);
+		return NULL;
+	}
+	value = libio_strconst(str);
+	if (!value) {
+		elog(LOG_NOTICE, 0, "preset %s not found", str);
+		--recurr;
+		return NULL;
+	}
+	par = create_libiopar(value);
+	--recurr;
+	return par;
 }
 
 /* iterator */

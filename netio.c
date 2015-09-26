@@ -748,7 +748,7 @@ static int netio_send_direct(const char *uri, const char *pkt, int connmayfail)
 			uri += 4;
 		} else
 			/* find uri through iopar preset */
-			uri = libio_get_preset(uri);
+			uri = libio_strconst(uri);
 	} while (!family);
 
 	/* autobind client socket */

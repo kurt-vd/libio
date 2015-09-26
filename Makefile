@@ -18,7 +18,7 @@ CPPFLAGS += -DLOCALVERSION=\"$(LOCALVERSION)\"
 	@$(CC) -c -o $@ -DNAME=\"$*\" $(CPPFLAGS) $(CFLAGS) $<
 
 libio.a: libio.o led.o inputev.o netio.o sysfspar.o \
-	virtual.o shared.o preset.o \
+	virtual.o shared.o \
 	consts.o longdetection.o \
 	cpuload.o \
 	applelight.o \

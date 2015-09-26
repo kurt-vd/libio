@@ -119,6 +119,7 @@ const char *libio_get_preset(const char *name)
 struct iopar *mkpreset(char *str)
 {
 	const char *value;
+	struct iopar *par;
 
 	if (!s.loaded)
 		load_presets();
@@ -127,13 +128,15 @@ struct iopar *mkpreset(char *str)
 		elog(LOG_NOTICE, 0, "%s: max. nesting reached, are you looping?", __func__);
 		return NULL;
 	}
-	--s.level;
-	value = libio_get_preset(str);
+	value = libio_strconst(str);
 	if (!value) {
 		elog(LOG_NOTICE, 0, "preset %s not found", str);
+		--s.level;
 		return NULL;
 	}
-	return create_libiopar(libio_get_preset(str));
+	par = create_libiopar(value);
+	--s.level;
+	return par;
 }
 
 /* iterator */

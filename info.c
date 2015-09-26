@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <math.h>
 #include <ctype.h>
 
 #include <unistd.h>
@@ -10,31 +11,28 @@
 
 /* libio-related applets */
 
-static int libio_presets(int argc, char *argv[])
-{
-	const char *key = NULL;
-	int j;
-
-	if (argc > 1)
-		for (j = 1; j < argc; ++j)
-			printf("%s=%s\n", argv[j], libio_get_preset(argv[j]));
-	else
-		while ((key = libio_next_preset(key)) != NULL)
-			printf("%s=%s\n", key, libio_get_preset(key));
-	return 0;
-}
-
 static int libio_consts(int argc, char *argv[])
 {
 	const char *key = NULL;
 	int j;
+	double val;
 
 	if (argc > 1)
-		for (j = 1; j < argc; ++j)
-			printf("%s=%lf\n", argv[j], libio_const(argv[j]));
+		for (j = 1; j < argc; ++j) {
+			val = libio_const(argv[j]);
+			if (!isnan(val))
+				printf("%s=%lf\n", argv[j], val);
+			else
+				printf("%s=%s\n", argv[j], libio_strconst(argv[j]));
+		}
 	else
-		while ((key = libio_next_const(key)) != NULL)
-			printf("%s=%lf\n", key, libio_const(key));
+		while ((key = libio_next_const(key)) != NULL) {
+			val = libio_const(key);
+			if (!isnan(val))
+				printf("%s=%lf\n", key, val);
+			else
+				printf("%s=%s\n", key, libio_strconst(key));
+		}
 	return 0;
 }
 
@@ -82,7 +80,6 @@ static int netiomsg_request(int argc, char *argv[])
 __attribute__((constructor))
 static void add_default_applets(void)
 {
-	register_applet("presets", libio_presets);
 	register_applet("consts", libio_consts);
 	register_applet("sendto", netiomsg_sendto);
 	register_applet("request", netiomsg_request);
