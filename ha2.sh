@@ -4,7 +4,7 @@ POWERLED=/sys/class/leds/power
 
 case "$1" in
 services)
-	echo "direct veluxg fancy abort poweroff"
+	echo "direct veluxg velux fancy abort poweroff"
 	;;
 direct)
 	# main io switches to control outputs
@@ -22,6 +22,10 @@ direct)
 veluxg)
 	# velux gordijn
 	exec io hamotor -lunix:@veluxg -i igang4 -i iwest2 -i izuid2 +hi=oveluxhg +lo=oveluxlg
+	;;
+velux)
+	# velux gordijn
+	exec io hamotor -lunix:@velux -i igang2 +hi=oveluxh
 	;;
 fancy)
 	exec io ha2addons -l unix:@ha2+
