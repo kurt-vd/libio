@@ -162,6 +162,8 @@ static inline double next_wakeup(struct motor *mot)
 
 	if (mot->state == ST_WAIT)
 		return COOLDOWN_TIME;
+	else if (mot->state == ST_POST)
+		return mot->maxval * 0.10;
 
 	if (mot->ctrltype == CTRL_POS)
 		endpoint = mot->setpoint;
@@ -187,20 +189,20 @@ static void motor_handler(void *dat)
 	if (mot->state == ST_WAIT)
 		mot->state = ST_IDLE;
 
-	if (mot->ctrltype == CTRL_POS) {
-		if (mot->state == ST_POST) {
-			/* stop now */
-			if (change_motor_speed(mot, 0) < 0)
-				goto repeat;
-			mot->state = ST_WAIT;
-		} else if (fabs(motor_curr_position(mot) - mot->setpoint)*mot->maxval < 0.01) {
-			if (motor_curr_speed(mot) != 0) {
-				/* run 10% in 'post' mode */
-				mot->state = ST_POST;
-				libt_add_timeout(mot->maxval * 0.10, motor_handler, mot);
-				return;
-			}
-		} else if (motor_curr_position(mot) < mot->setpoint) {
+	/* test for end-of-course statuses */
+	if (mot->state == ST_POST) {
+		/* go into cooldown state for a bit */
+		if (change_motor_speed(mot, 0) < 0)
+			goto repeat;
+		mot->state = ST_WAIT;
+	} else if ((motor_curr_speed(mot) < 0) && (motor_curr_position(mot) <= 0.01)) {
+		/* run 10% in 'post' mode */
+		mot->state = ST_POST;
+	} else if ((motor_curr_speed(mot) > 0) && (motor_curr_position(mot) >= 0.99)) {
+		/* run 10% in 'post' mode */
+		mot->state = ST_POST;
+	} else if (mot->ctrltype == CTRL_POS) {
+		if (motor_curr_position(mot) < (mot->setpoint - 0.01)) {
 			if (motor_curr_speed(mot) < 0) {
 				if (change_motor_speed(mot, 0) < 0)
 					goto repeat;
@@ -210,7 +212,7 @@ static void motor_handler(void *dat)
 					goto repeat;
 				mot->state = ST_BUSY;
 			}
-		} else /*if (motor_curr_position(mot) > mot->setpoint) */{
+		} else if (motor_curr_position(mot) > (mot->setpoint + 0.01)) {
 			if (motor_curr_speed(mot) > 0) {
 				if (change_motor_speed(mot, 0) < 0)
 					goto repeat;
@@ -220,53 +222,33 @@ static void motor_handler(void *dat)
 					goto repeat;
 				mot->state = ST_BUSY;
 			}
+		} else if (mot->state != ST_IDLE) {
+			if (change_motor_speed(mot, 0) < 0)
+				goto repeat;
+			mot->state = ST_WAIT;
 		}
-		if (mot->state != ST_IDLE)
-			libt_add_timeout(next_wakeup(mot), motor_handler, mot);
-		return;
-repeat:
-		libt_add_timeout(0.1, motor_handler, mot);
 	} else {
 		/* DIR control */
-
-		/* test for end-of-course statuses */
-		if (mot->state == ST_POST) {
-			mot->reqspeed = 0;
-		} else if (((mot->reqspeed < 0) && (motor_curr_position(mot) <= 0)) ||
-			   ((mot->reqspeed > 0) && (motor_curr_position(mot) >= 1))) {
-			/* run 10% in 'post' mode */
-			mot->state = ST_POST;
-			libt_add_timeout(mot->maxval * 0.10, motor_handler, mot);
-			return;
-		}
-
 		oldspeed = motor_curr_speed(mot);
-		if ((oldspeed * mot->reqspeed) < 0) {
-			/* reverse direction, wait a bit */
-			if (change_motor_speed(mot, 0) < 0) {
-				/* repeat */
-				libt_add_timeout(0.1, motor_handler, mot);
-				return;
-			}
-		} else if (fabs(oldspeed - mot->reqspeed) > 0.01) {
+		if (fabs(oldspeed - mot->reqspeed) > 0.01) {
 			/* speed must change */
-			if (change_motor_speed(mot, mot->reqspeed) < 0) {
-				/* repeat */
-				libt_add_timeout(0.1, motor_handler, mot);
-				return;
+			if ((fabs(oldspeed) > 0.01) || (fabs(mot->reqspeed) < 0.01)) {
+				/* stop motor */
+				if (change_motor_speed(mot, 0) < 0)
+					goto repeat;
+				mot->state = ST_WAIT;
+			} else {
+				if (change_motor_speed(mot, mot->reqspeed) < 0)
+					goto repeat;
+				mot->state = ST_BUSY;
 			}
 		}
-
-		if (motor_curr_speed(mot) != 0) {
-			mot->state = ST_BUSY;
-			libt_add_timeout(next_wakeup(mot), motor_handler, mot);
-		} else if (oldspeed != 0) {
-			/* go into cooldown state for a bit */
-			mot->state = ST_WAIT;
-			libt_add_timeout(next_wakeup(mot), motor_handler, mot);
-		} else
-			mot->state = ST_IDLE;
 	}
+	libt_add_timeout(next_wakeup(mot), motor_handler, mot);
+	return;
+repeat:
+	/* schedule next attempt */
+	libt_add_timeout(0.1, motor_handler, mot);
 }
 
 static inline void call_motor_handler(struct motor *mot)
