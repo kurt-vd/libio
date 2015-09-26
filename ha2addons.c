@@ -36,6 +36,7 @@ static const char help_msg[] =
 	" main blueled\n"
 	" hal\n"
 	" veluxhgpos veluxlgpos\n"
+	" veluxhpos veluxlpos\n"
 	"Required inputs:\n"
 	" badk1 badk2 badk3 ...\n"
 	" blue1 blue2 ... \n"
@@ -70,6 +71,7 @@ static struct args {
 	int verbose;
 	int led, zolder, fan, lavabo, bad,
 	    bluebad, main, blueled, hal,
+	    veluxhpos, veluxlpos,
 	    veluxhgpos, veluxlgpos;
 	int badk[NBADK], blue[NBLUE], imain[NMAIN], poets;
 	double hopstaan, hslapen;
@@ -217,6 +219,8 @@ static int ha2addons(int argc, char *argv[])
 	s.hal = create_iopar("hal");
 	s.veluxhgpos = create_iopar("veluxhgpos");
 	s.veluxlgpos = create_iopar("veluxlgpos");
+	s.veluxhpos = create_iopar("veluxhpos");
+	s.veluxlpos = create_iopar("veluxlpos");
 
 	s.badk[0] = create_iopar("badk1");
 	s.badk[1] = create_iopar("badk2");
@@ -346,6 +350,16 @@ static int ha2addons(int argc, char *argv[])
 		schedule_output_reset_timer(s.fan, 1.5 HOUR);
 		/* reset zolder light */
 		schedule_output_reset_timer(s.zolder, 2 HOUR);
+
+		/* close velux after xxx, only when opened between ... */
+		if (iopar_dirty(s.veluxhpos) && (get_iopar(s.veluxhpos) > 0)) {
+			if (tod() > 6.5 && tod() < 10)
+				/* 5 min */
+				libt_add_timeout(0.08 HOUR, output_timeout, (void *)(long)s.veluxhpos);
+			else
+				libt_add_timeout(2 HOUR, output_timeout, (void *)(long)s.veluxhpos);
+		} else if (iopar_dirty(s.veluxhpos) && (get_iopar(s.veluxhpos) < 0.001))
+			libt_remove_timeout(output_timeout, (void *)(long)s.veluxhpos);
 
 		if (iopar_dirty(s.led) && (get_iopar(s.led) > 0.01) &&
 					(get_iopar(s.led) < 0.99))
