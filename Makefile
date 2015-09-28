@@ -1,7 +1,7 @@
 PROGS	= io
 default: $(PROGS)
 
-LOCALVERSION	:= $(shell ./getlocalversion .)
+LOCALVERSION	:= $(shell git describe --tags --always --dirty)
 
 PREFIX	= /usr/local
 CFLAGS	= -Wall -g3 -O0
