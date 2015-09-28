@@ -98,8 +98,8 @@ static void load_consts_file(const char *file)
 /* load all system-wide & user definded consts */
 static void load_consts(void)
 {
-	load_consts_file(".libio-consts");
-	load_consts_file("/etc/libio-consts.conf");
+	load_consts_file(".libio");
+	load_consts_file("/etc/libio.conf");
 	fflush(stderr);
 	s.loaded = 1;
 }
