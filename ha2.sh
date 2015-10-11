@@ -4,7 +4,7 @@ POWERLED=/sys/class/leds/power
 
 case "$1" in
 services)
-	echo "direct veluxg velux fancy abort poweroff"
+	echo "direct veluxg velux fancy abort"
 	;;
 direct)
 	# main io switches to control outputs
