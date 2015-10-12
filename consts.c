@@ -134,7 +134,7 @@ const char *libio_strconst(const char *name)
 
 double libio_const(const char *name)
 {
-	return todouble(libio_strconst(name));
+	return todouble(libio_strconst(name) ?: "nan");
 }
 
 struct iopar *mkpreset(char *str)
