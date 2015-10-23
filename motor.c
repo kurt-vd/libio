@@ -198,6 +198,7 @@ static void motor_handler(void *dat)
 			goto repeat;
 		mot->state = ST_WAIT;
 	} else if ((motor_curr_speed(mot) < 0) && (motor_curr_position(mot) <= 0.01)) {
+		mot->reqspeed = 0;
 		if (mot->flags & EOL0)
 			/* run 10% in 'post' mode */
 			mot->state = ST_POST;
@@ -207,6 +208,7 @@ static void motor_handler(void *dat)
 			mot->state = ST_WAIT;
 		}
 	} else if ((motor_curr_speed(mot) > 0) && (motor_curr_position(mot) >= 0.99)) {
+		mot->reqspeed = 0;
 		if (mot->flags & EOL1)
 			/* run 10% in 'post' mode */
 			mot->state = ST_POST;
