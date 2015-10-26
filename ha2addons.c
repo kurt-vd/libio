@@ -77,6 +77,8 @@ static struct args {
 	double hopstaan, hslapen;
 	double lednight;
 	double longitude, latitude;
+	double waitfan;
+	double waitvelux, waitveluxmorning;
 
 	/* state */
 	const char *dim;
@@ -200,6 +202,9 @@ static int ha2addons(int argc, char *argv[])
 	s.lednight = libio_const("lednight");
 	s.longitude = libio_const("longitude");
 	s.latitude = libio_const("latitude");
+	s.waitfan = libio_const("wait-fan");
+	s.waitvelux = libio_const("waitvelux");
+	s.waitveluxmorning = libio_const("waitveluxmorning");
 
 	/* wait up to 5sec for remote */
 	for (j = 0; j < 50; ++j, usleep(100000))
@@ -347,17 +352,17 @@ static int ha2addons(int argc, char *argv[])
 		}
 
 		/* reset FAN */
-		schedule_output_reset_timer(s.fan, 1.5 HOUR);
+		schedule_output_reset_timer(s.fan, s.waitfan HOUR);
 		/* reset zolder light */
 		schedule_output_reset_timer(s.zolder, 2 HOUR);
 
 		/* close velux after xxx, only when opened between ... */
 		if (iopar_dirty(s.veluxhpos) && (get_iopar(s.veluxhpos) > 0)) {
+			double wait = s.waitvelux;
+
 			if (tod() > 6.5 && tod() < 10)
-				/* 5 min */
-				libt_add_timeout(0.08 HOUR, output_timeout, (void *)(long)s.veluxhpos);
-			else
-				libt_add_timeout(2 HOUR, output_timeout, (void *)(long)s.veluxhpos);
+				wait = s.waitveluxmorning;
+			libt_add_timeout(wait HOUR, output_timeout, (void *)(long)s.veluxhpos);
 		} else if (iopar_dirty(s.veluxhpos) && (get_iopar(s.veluxhpos) < 0.001))
 			libt_remove_timeout(output_timeout, (void *)(long)s.veluxhpos);
 
