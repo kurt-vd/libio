@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <math.h>
 #include <time.h>
 
 #include <unistd.h>
@@ -159,15 +160,27 @@ static inline int lavabo_dimmed(void)
 /* output timer */
 static void output_timeout(void *dat)
 {
-	set_iopar((long)dat, 0);
+	int iopar = (long)dat;
+
+	if (s.verbose)
+		elog(LOG_NOTICE, 0, "reset <%s>", iopar_name(iopar));
+	set_iopar(iopar, 0);
 }
 
-static void schedule_output_reset_timer(int iopar, double timeout)
+static void schedule_output_reset_timer(int iopar, double lo, double hi, double timeout)
 {
-	if (iopar_dirty(iopar) && (get_iopar(iopar) > 0))
+	if (!iopar_dirty(iopar))
+		return;
+
+	if (get_iopar(iopar) > lo && get_iopar(iopar) < hi) {
 		libt_add_timeout(timeout, output_timeout, (void *)(long)iopar);
-	else if (iopar_dirty(iopar) && (get_iopar(iopar) < 0.001))
+		if (s.verbose)
+			elog(LOG_NOTICE, 0, "schedule <%s> reset in %.3lfh", iopar_name(iopar), timeout / 3600);
+	} else if (get_iopar(iopar) < 0.001) {
 		libt_remove_timeout(output_timeout, (void *)(long)iopar);
+		if (s.verbose)
+			elog(LOG_NOTICE, 0, "cancel <%s> reset", iopar_name(iopar));
+	}
 }
 
 /* main */
@@ -352,27 +365,18 @@ static int ha2addons(int argc, char *argv[])
 		}
 
 		/* reset FAN */
-		schedule_output_reset_timer(s.fan, s.waitfan HOUR);
+		schedule_output_reset_timer(s.fan, 0.01, +INFINITY, s.waitfan HOUR);
 		/* reset zolder light */
-		schedule_output_reset_timer(s.zolder, 2 HOUR);
+		schedule_output_reset_timer(s.zolder, 0.01, +INFINITY, 2 HOUR);
 
 		/* close velux after xxx, only when opened between ... */
-		if (iopar_dirty(s.veluxhpos) && (get_iopar(s.veluxhpos) > 0)) {
-			double wait = s.waitvelux;
+		if (iopar_dirty(s.veluxhpos))
+			/* now it makes sense to start calculate the precise timeout */
+			schedule_output_reset_timer(s.veluxhpos, 0.01, +INFINITY,
+					(tod() > 6.5 && tod() < 10) ? s.waitveluxmorning : s.waitvelux);
 
-			if (tod() > 6.5 && tod() < 10)
-				wait = s.waitveluxmorning;
-			libt_add_timeout(wait HOUR, output_timeout, (void *)(long)s.veluxhpos);
-		} else if (iopar_dirty(s.veluxhpos) && (get_iopar(s.veluxhpos) < 0.001))
-			libt_remove_timeout(output_timeout, (void *)(long)s.veluxhpos);
-
-		if (iopar_dirty(s.led) && (get_iopar(s.led) > 0.01) &&
-					(get_iopar(s.led) < 0.99))
-			/* set timeout when dimmed */
-			libt_add_timeout(2 HOUR, output_timeout, (void *)(long)s.led);
-		else if (iopar_dirty(s.led))
-			/* reset led timeout when (changed) not dimmed */
-			libt_remove_timeout(output_timeout, (void *)(long)s.led);
+		/* schedule reset led when dimmed */
+		schedule_output_reset_timer(s.led, 0.01, 0.99, 1 HOUR);
 
 		if (libio_wait() < 0)
 			break;
