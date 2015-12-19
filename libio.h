@@ -50,7 +50,8 @@ struct iopar;
 
 /* parameter API */
 extern int create_iopar(const char *str);
-extern int create_iopar_type(const char *type, const char *fmt, ...);
+extern int create_ioparf(const char *fmt, ...)
+	__attribute__((format(printf,1,2)));
 extern void destroy_iopar(int iopar);
 extern double get_iopar(int iopar);
 extern int set_iopar(int iopar, double value);

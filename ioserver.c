@@ -78,7 +78,7 @@ static int ioserver(int argc, char *argv[])
 			continue;
 		*sep++ = 0;
 		lnk = zalloc(sizeof(*lnk));
-		lnk->a = create_iopar_type("netio", tmpstr);
+		lnk->a = create_ioparf("netio:%s", tmpstr);
 		lnk->b = create_iopar(sep);
 		lnk->next = s.links;
 		s.links = lnk;

@@ -89,7 +89,7 @@ static int hadirect(int argc, char *argv[])
 			/* new entry */
 			*streq++ = 0;
 			lnk = zalloc(sizeof(*lnk));
-			lnk->pub = create_iopar_type("netio", tmpstr);
+			lnk->pub = create_ioparf("netio:%s", tmpstr);
 			lnk->out = create_iopar(streq);
 			/* add link */
 			lnk->next = s.links;

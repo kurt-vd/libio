@@ -163,8 +163,8 @@ static int hamotor(int argc, char *argv[])
 			elog(LOG_CRIT, 0, "bad spec '%s', missing '='", tmpstr);
 		*sep++ = 0;
 		lnk = zalloc(sizeof(*lnk));
-		lnk->pdmot = create_iopar_type("netio", tmpstr);
-		lnk->ppmot = create_iopar_type("netio", posname(tmpstr));
+		lnk->pdmot = create_ioparf("netio:%s", tmpstr);
+		lnk->ppmot = create_ioparf("netio:%s", posname(tmpstr));
 		lnk->dmot = create_iopar(sep);
 		lnk->pmot = create_iopar("pmotor:");
 		lnk->next = s.links;
