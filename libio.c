@@ -311,6 +311,7 @@ int create_iopar(const char *str)
 		return -1;
 	iopar = create_libiopar(str);
 	if (iopar) {
+		iopar->name = strdup(str);
 		add_iopar(iopar);
 		return iopar->id;
 	}
@@ -336,6 +337,8 @@ int create_ioparf(const char *fmt, ...)
 
 void cleanup_libiopar(struct iopar *iopar)
 {
+	if (iopar->name)
+		free(iopar->name);
 }
 
 void destroy_iopar(int iopar_id)
@@ -419,6 +422,13 @@ int iopar_present(int iopar_id)
 		return -1;
 	}
 	return (iopar->state & ST_PRESENT) ? 1 : 0;
+}
+
+const char *iopar_name(int iopar_id)
+{
+	struct iopar *iopar = _lookup_iopar(iopar_id);
+
+	return iopar ? iopar->name : NULL;
 }
 
 void libio_flush(void)

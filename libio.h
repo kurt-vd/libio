@@ -60,6 +60,8 @@ extern int set_iopar(int iopar, double value);
 extern int iopar_dirty(int iopar);
 /* return true when iopar is lost */
 extern int iopar_present(int iopar);
+/* return the name used during construction */
+extern const char *iopar_name(int iopar);
 
 /* fetch with constant from /etc/libio-const.conf */
 extern const char *libio_strconst(const char *name);

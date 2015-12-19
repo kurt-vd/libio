@@ -9,6 +9,7 @@ struct iopar {
 	int state;
 #define ST_DIRTY	0x01
 #define ST_PRESENT	0x08 /* parameter has real data */
+	char *name;
 	double value;
 	void (*del)(struct iopar *);
 	int (*set)(struct iopar *, double value);
