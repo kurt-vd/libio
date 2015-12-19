@@ -97,6 +97,8 @@ static void del_teleruptor(struct iopar *iopar)
 
 	destroy_iopar(tr->fdb);
 	destroy_iopar(tr->out);
+	cleanup_libiopar(iopar);
+	free(iopar);
 }
 
 static void teleruptor_feedback(void *dat)

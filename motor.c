@@ -320,10 +320,25 @@ static void del_motor_dir(struct iopar *iopar)
 		destroy_iopar(mot->out1);
 		destroy_iopar(mot->out2);
 	}
+	cleanup_libiopar(iopar);
+	if (!mot->pospar.id)
+		/* dirpar is already free'd */
+		free(mot);
+	else
+		/* clear my id already */
+		iopar->id = 0;
 }
 static void del_motor_pos(struct iopar *iopar)
 {
-	return del_motor_dir(&(pospar2motor(iopar))->dirpar);
+	struct motor *mot = pospar2motor(iopar);
+
+	cleanup_libiopar(iopar);
+	if (!mot->dirpar.id)
+		/* dirpar is already free'd */
+		free(mot);
+	else
+		/* clear my id already */
+		iopar->id = 0;
 }
 
 /*
