@@ -173,6 +173,9 @@ static void schedule_output_reset_timer(int iopar, double lo, double hi, double 
 		return;
 
 	if (get_iopar(iopar) > lo && get_iopar(iopar) < hi) {
+		if (libt_timeout_exist(output_timeout, (void *)(long)iopar))
+			/* timeout already scheduled */
+			return;
 		libt_add_timeout(timeout, output_timeout, (void *)(long)iopar);
 		if (s.verbose)
 			elog(LOG_NOTICE, 0, "schedule <%s> reset in %.3lfh", iopar_name(iopar), timeout / 3600);
