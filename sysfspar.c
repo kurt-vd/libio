@@ -39,7 +39,8 @@ struct sysfspar {
 	double edge;
 	double hyst;
 	double mul;
-	char sysfs[2];
+	char *sysfs;
+	char *realsysfs;
 };
 
 static void sysfspar_read(struct sysfspar *sp, int warn)
@@ -52,7 +53,7 @@ static void sysfspar_read(struct sysfspar *sp, int warn)
 	/* warn if requested, or param is present */
 	warn |= sp->iopar.state & ST_PRESENT;
 
-	fd = open(sp->sysfs, O_RDONLY);
+	fd = open(sp->realsysfs, O_RDONLY);
 	if (fd < 0) {
 		/* avoid alerting too much */
 		if (warn)
@@ -127,7 +128,7 @@ static int set_sysfspar(struct iopar *iopar, double value)
 	if (isnan(value))
 		value = 0;
 
-	fp = fopen(sp->sysfs, "w");
+	fp = fopen(sp->realsysfs, "w");
 	if (!fp) {
 		if (sp->iopar.state & ST_PRESENT)
 			elog(LOG_WARNING, errno, "fopen %s", sp->sysfs);
@@ -160,6 +161,9 @@ static void del_sysfspar(struct iopar *iopar)
 
 	libt_remove_timeout(sysfspar_timeout, sp);
 	cleanup_libiopar(&sp->iopar);
+	free(sp->sysfs);
+	if (sp->realsysfs)
+		free(sp->realsysfs);
 	free(sp);
 }
 
@@ -173,7 +177,14 @@ struct iopar *mksysfspar(char *spec)
 	sp->iopar.del = del_sysfspar;
 	sp->iopar.set = set_sysfspar;
 	/* force the first read to mark value as dirty */
-	strcpy(sp->sysfs, strtok(spec, ","));
+	sp->sysfs = strdup(strtok(spec, ",") ?: "/dev/null");
+	sp->realsysfs = findfile(sp->sysfs);
+	if (!sp->realsysfs) {
+		elog(LOG_WARNING, ENOENT, "glob %s", sp->sysfs);
+		free(sp->sysfs);
+		free(sp);
+		return NULL;
+	}
 	sp->edge = NAN;
 	sp->hyst = NAN;
 	sp->delay = 1;
@@ -212,7 +223,7 @@ struct iopar *mksysfspar(char *spec)
 	}
 
 	/* read initial value & schedule next */
-	if (!access(sp->sysfs, R_OK)) {
+	if (!access(sp->realsysfs, R_OK)) {
 		/* read repeatedly */
 		sysfspar_read(sp, 1);
 		libt_add_timeout(sp->delay, sysfspar_timeout, sp);
