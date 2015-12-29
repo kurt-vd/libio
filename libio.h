@@ -43,6 +43,12 @@ extern int attr_read(int default_value, const char *fmt, ...)
 extern int attr_write(int value, const char *fmt, ...)
 	__attribute__((format(printf,2,3)));
 
+/* find file with shell wildcards
+ * returns NULL when not matched
+ * the result is malloc'd and should be freed by caller
+ */
+extern char *findfile(const char *pattern);
+
 /* set single event with itimer */
 extern int schedule_itimer(double value);
 

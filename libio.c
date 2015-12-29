@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include <glob.h>
 #include <sys/time.h>
 
 #include "lib/libt.h"
@@ -174,6 +175,30 @@ int attr_write(int value, const char *fmt, ...)
 	}
 	free(file);
 	return ret;
+}
+
+/* wildcard match */
+static int globerr(const char *path, int errnum)
+{
+	elog(LOG_WARNING, errnum, "glob ... %s", path);
+	return 0;
+}
+
+char *findfile(const char *pattern)
+{
+	int ret;
+	glob_t res = {};
+	char *resstr = NULL;
+
+	ret = glob(pattern, 0, globerr, &res);
+	if (ret == GLOB_NOMATCH)
+		;
+	else if (ret)
+		elog(LOG_ERR, errno, "glob %s", pattern);
+	else
+		resstr = strdup(res.gl_pathv[0]);
+	globfree(&res);
+	return resstr;
 }
 
 /* setup ITIMER */
