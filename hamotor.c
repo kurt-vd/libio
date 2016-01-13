@@ -215,6 +215,9 @@ static int hamotor(int argc, char *argv[])
 			else if (iopar_dirty(lnk->ppmot)) {
 				set_iopar(lnk->pmot, get_iopar(lnk->ppmot));
 				set_iopar(lnk->ppmot, get_iopar(lnk->pmot));
+				/* in case the direction changed, flush to netio */
+				set_iopar(lnk->pdmot, get_iopar(lnk->dmot));
+				remember_dir(lnk, get_iopar(lnk->dmot));
 			}
 		}
 
