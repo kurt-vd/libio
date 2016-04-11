@@ -376,7 +376,7 @@ static int ha2addons(int argc, char *argv[])
 		if (iopar_dirty(s.veluxhpos))
 			/* now it makes sense to start calculate the precise timeout */
 			schedule_output_reset_timer(s.veluxhpos, 0.01, +INFINITY,
-					(tod() > 6.5 && tod() < 10) ? s.waitveluxmorning : s.waitvelux);
+					(tod() > 6.5 && tod() < 10) ? s.waitveluxmorning HOUR : s.waitvelux HOUR);
 
 		/* schedule reset led when dimmed */
 		schedule_output_reset_timer(s.led, 0.01, 0.99, 1 HOUR);
