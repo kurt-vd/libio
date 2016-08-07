@@ -137,11 +137,11 @@ static void del_ioremote(struct ioremote *rem)
 }
 
 /* network address translation, returns addr_len */
-static int str_to_sockname(const char *uri, struct sockaddr *paddr, int family)
+int netio_strtosockname(const char *uri, void *paddr, int family)
 {
 	int len;
 	char *pstr, uribuf[strlen(uri ?: "") +1], *luri = uribuf;
-	
+
 	strcpy(luri, uri ?: "");
 	pstr = strpbrk(luri, "?#");
 	if (pstr)
@@ -456,7 +456,7 @@ static int netio_autobind(int family)
 	}
 	fcntl(sk, F_SETFD, fcntl(sk, F_GETFD) | FD_CLOEXEC);
 
-	namelen = str_to_sockname(NULL, &name.sa, family);
+	namelen = netio_strtosockname(NULL, &name.sa, family);
 	if (namelen > 0) {
 		ret = bind(sk, &name.sa, namelen);
 		if (ret < 0) {
@@ -502,7 +502,7 @@ int libio_bind_net(const char *uri)
 		return -1;
 	}
 
-	namelen = ret = str_to_sockname(namestr+1, &name.sa, family);
+	namelen = ret = netio_strtosockname(namestr+1, &name.sa, family);
 	if (ret < 0)
 		goto fail_sockname;
 
@@ -617,7 +617,7 @@ static struct iopar *mknetioremote(const char *uri, int family)
 	/* register sockparam */
 	sock = iosockets[family];
 	/* lookup remote */
-	namelen = str_to_sockname(uri, &name.sa, family);
+	namelen = netio_strtosockname(uri, &name.sa, family);
 	if (namelen < 0)
 		goto fail_sockname;
 	for (remote = sock->remotes; remote; remote = remote->next) {
@@ -756,7 +756,7 @@ static int netio_send_direct(const char *uri, const char *pkt, int connmayfail)
 		goto fail_family;
 
 	/* don't create a remote, just find a peername for use in sendto */
-	namelen = str_to_sockname(uri, &name.sa, family);
+	namelen = netio_strtosockname(uri, &name.sa, family);
 	if (namelen < 0)
 		goto fail_sock;
 

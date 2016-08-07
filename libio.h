@@ -81,6 +81,9 @@ extern int libio_bind_net(const char *uri);
 /* netio: probe for remote socket (send a *probe packet) */
 extern int netio_probe_remote(const char *uri);
 
+/* parse uri into a sockaddr */
+extern int netio_strtosockname(const char *uri, void *paddr, int family);
+
 /* netio messages */
 extern int netio_send_msg(const char *uri, const char *signal);
 /* ack current received message */
