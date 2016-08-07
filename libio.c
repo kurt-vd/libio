@@ -28,6 +28,7 @@ int libio_wait(void)
 	} else
 		libe_flush();
 	libt_flush();
+	libio_run_notifiers();
 	return ret;
 }
 
@@ -465,6 +466,24 @@ void libio_flush(void)
 	for (j = 1; j < tablesize; ++j) {
 		if (table[j])
 			table[j]->state &= ~ST_DIRTY;
+	}
+}
+
+static void iopar_notify(struct iopar *iopar)
+{
+	struct iopar_notifier *notifier;
+
+	for (notifier = iopar->notifiers; notifier; notifier = notifier->next)
+		notifier->fn(notifier->dat);
+}
+
+void libio_run_notifiers(void)
+{
+	int j;
+
+	for (j = 1; j < tablesize; ++j) {
+		if (table[j] && (table[j]->state & ST_DIRTY))
+			iopar_notify(table[j]);
 	}
 }
 

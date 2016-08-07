@@ -25,11 +25,7 @@ struct iopar {
 
 static inline void iopar_set_dirty(struct iopar *iopar)
 {
-	struct iopar_notifier *notifier;
-
 	iopar->state |= ST_DIRTY;
-	for (notifier = iopar->notifiers; notifier; notifier = notifier->next)
-		notifier->fn(notifier->dat);
 }
 
 static inline void iopar_set_present(struct iopar *iopar)

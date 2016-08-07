@@ -106,10 +106,16 @@ extern int longdet_state(int id);
 extern int longdet_edge(int id);
 
 /*
- * iopars_flush
+ * libio_flush
  * called at each main cycle, clears dirty flags
  */
 extern void libio_flush(void);
+/*
+ * libio_run_notifiers
+ * called at each main cycle, before processing new data
+ * It calls internal notifiers for iopar dependencies
+ */
+extern void libio_run_notifiers(void);
 
 /* set verbosity of libio */
 extern void libio_set_trace(int value);
