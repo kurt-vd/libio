@@ -107,14 +107,16 @@ static const char *netdevstr(const char *iface)
 		case AF_PACKET:
 			break;
 		case AF_INET:
-			str += sprintf(str, ", %s",
-					inet_ntop(ptr->ifa_addr->sa_family, &((const struct sockaddr_in *)ptr->ifa_addr)->sin_addr, inetstr, sizeof(inetstr))
-					?: "inet");
+			inetstr[0] = 0;
+			inet_ntop(ptr->ifa_addr->sa_family, &((const struct sockaddr_in *)ptr->ifa_addr)->sin_addr, inetstr, sizeof(inetstr));
+			if (strncmp(inetstr, "169.254.", 8))
+				str += sprintf(str, ", %s", inetstr);
 			break;
 		case AF_INET6:
-			str += sprintf(str, ", %s",
-					inet_ntop(ptr->ifa_addr->sa_family, &((const struct sockaddr_in6 *)ptr->ifa_addr)->sin6_addr, inetstr, sizeof(inetstr))
-					?: "inet6");
+			inetstr[0] = 0;
+			inet_ntop(ptr->ifa_addr->sa_family, &((const struct sockaddr_in6 *)ptr->ifa_addr)->sin6_addr, inetstr, sizeof(inetstr));
+			if (strncmp(inetstr, "fe80:", 5))
+				str += sprintf(str, ", %s", inetstr);
 			break;
 		}
 	}
