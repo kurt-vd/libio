@@ -105,6 +105,9 @@ extern int longdet_state(int id);
 /* longdet_edge() returns get_longdet when it just changed */
 extern int longdet_edge(int id);
 
+/* resource control */
+extern int libio_take_resource(const char *uri, const char *cid, double value);
+
 /*
  * libio_flush
  * called at each main cycle, clears dirty flags
