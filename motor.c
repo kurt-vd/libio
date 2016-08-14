@@ -70,6 +70,10 @@ struct motor {
 	double maxval;
 	/* requested position */
 	double setpoint;
+
+	char *poweruri;
+	char *powerid;
+	double powerval;
 };
 
 /* find motor struct */
@@ -117,6 +121,32 @@ static void motor_update_position(struct motor *mot)
 	mot->lasttime = currtime;
 }
 
+static void keep_motor_power(void *dat)
+{
+	struct motor *mot = dat;
+
+	if (labs(mot->dirpar.value) < 0.001)
+		/* stopp polling */
+		return;
+
+	if (libio_take_resource(mot->poweruri, mot->powerid, mot->powerval) >= 0) {
+		/* schedule next poll */
+		libt_add_timeout(0.5, keep_motor_power, mot);
+		return;
+	}
+
+	libio_take_resource(mot->poweruri, mot->powerid, 0);
+	/* keep power failed! */
+	elog(LOG_WARNING, 0, "%s#%s: lost power", mot->poweruri, mot->powerid);
+	/* stop motor */
+	set_iopar(mot->out1, NAN);
+	set_iopar(mot->out2, NAN);
+
+	motor_update_position(mot);
+	mot->dirpar.value = 0;
+	iopar_set_dirty(&mot->dirpar);
+}
+
 /* actually set the GPIO's for the motor. caller should deal with timeouts */
 static int change_motor_speed(struct motor *mot, double speed)
 {
@@ -124,12 +154,19 @@ static int change_motor_speed(struct motor *mot, double speed)
 		/* writing NAN should not fail */
 		set_iopar(mot->out1, NAN);
 		set_iopar(mot->out2, NAN);
+		libt_remove_timeout(keep_motor_power, mot);
+		libio_take_resource(mot->poweruri, mot->powerid, 0);
 	} else if (speed > 0) {
+		if (libio_take_resource(mot->poweruri, mot->powerid, mot->powerval) < 0)
+			return change_motor_speed(mot, 0);
 		if (set_iopar(mot->out2, (mot->flags & INV2) ? 1 : 0) < 0)
 			goto fail_2;
 		if (set_iopar(mot->out1, speed) < 0)
 			goto fail_21;
+		libt_add_timeout(0.5, keep_motor_power, mot);
 	} else if (speed < 0) {
+		if (libio_take_resource(mot->poweruri, mot->powerid, mot->powerval) < 0)
+			return change_motor_speed(mot, 0);
 		if (mot->type == TYPE_GODIR) {
 			if (set_iopar(mot->out2, (mot->flags & INV2) ? 0 : 1) < 0)
 				goto fail_2;
@@ -141,6 +178,7 @@ static int change_motor_speed(struct motor *mot, double speed)
 			if (set_iopar(mot->out2, -speed) < 0)
 				goto fail_12;
 		}
+		libt_add_timeout(0.5, keep_motor_power, mot);
 	}
 	motor_update_position(mot);
 	mot->dirpar.value = speed;
@@ -150,10 +188,12 @@ fail_21:
 	/* writing NAN should not fail */
 	set_iopar(mot->out2, NAN);
 fail_2:
+	libio_take_resource(mot->poweruri, mot->powerid, 0);
 	return -1;
 fail_12:
 	set_iopar(mot->out1, NAN);
 fail_1:
+	libio_take_resource(mot->poweruri, mot->powerid, 0);
 	return -1;
 }
 
@@ -312,33 +352,46 @@ static int set_motor_dir(struct iopar *iopar, double newvalue)
 	return 0;
 }
 
+static void cleanup_motorpar(struct motor *mot)
+{
+	/* stop motor */
+	change_motor_speed(mot, 0);
+	/* free power resources */
+	if (mot->poweruri)
+		free(mot->poweruri);
+	if (mot->powerid)
+		free(mot->powerid);
+
+	/* cleanup child iopar's */
+	destroy_iopar(mot->out1);
+	destroy_iopar(mot->out2);
+
+	/* cleanup myself */
+	cleanup_libiopar(&mot->pospar);
+	cleanup_libiopar(&mot->dirpar);
+	free(mot);
+}
+
 static void del_motor_dir(struct iopar *iopar)
 {
 	struct motor *mot = dirpar2motor(iopar);
 
-	if (!--mot->refcnt) {
-		destroy_iopar(mot->out1);
-		destroy_iopar(mot->out2);
-	}
-	cleanup_libiopar(iopar);
-	if (!mot->pospar.id)
-		/* dirpar is already free'd */
-		free(mot);
-	else
+	if (mot->pospar.id)
 		/* clear my id already */
 		iopar->id = 0;
+	else
+		cleanup_motorpar(mot);
 }
+
 static void del_motor_pos(struct iopar *iopar)
 {
 	struct motor *mot = pospar2motor(iopar);
 
-	cleanup_libiopar(iopar);
-	if (!mot->dirpar.id)
-		/* dirpar is already free'd */
-		free(mot);
-	else
+	if (mot->dirpar.id)
 		/* clear my id already */
 		iopar->id = 0;
+	else
+		cleanup_motorpar(mot);
 }
 
 /*
@@ -407,7 +460,7 @@ struct iopar *mkmotordir(char *str)
 	}
 
 	if (ntok < 4) {
-		elog(LOG_ERR, 0, "%s: need arguments \"[MOTORTYPE(updown|godir)]+OUT1+[/]OUT2+MAXVAL[+eol0,eol1,noeol]\"", __func__);
+		elog(LOG_ERR, 0, "%s: need arguments \"[MOTORTYPE(updown|godir)]+OUT1+[/]OUT2+MAXVAL[+eol0,eol1,noeol,power=URI#CID:VALUE]\"", __func__);
 		goto fail_config;
 	}
 
@@ -419,6 +472,12 @@ struct iopar *mkmotordir(char *str)
 		mot->flags = (mot->flags & ~EOL0) | EOL1;
 	else if (!strcmp("noeol", tok))
 		mot->flags &= ~(EOL0| EOL1);
+	else if (!strncmp("power=", tok, 6)) {
+		tok += 6;
+		mot->poweruri = strdup(strtok(tok, "#"));
+		mot->powerid = strdup(strtok(NULL, ":") ?: "motor");
+		mot->powerval = strtod(strtok(NULL, ":") ?: "1", NULL);
+	}
 
 	/* fixups */
 	if (mot->type == TYPE_UPDOWN)
