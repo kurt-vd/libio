@@ -411,7 +411,8 @@ struct iopar *mkmotordir(char *str)
 		goto fail_config;
 	}
 
-	for (tok = mygetsubopt(saved); tok; tok = mygetsubopt(NULL))
+	/* parse the final ,-seperated options */
+	for (tok = strtok_r(tok, ",", &saved); tok; tok = strtok_r(NULL, ",", &saved))
 	if (!strcmp("eol0", tok))
 		mot->flags = (mot->flags & ~EOL1) | EOL0;
 	else if (!strcmp("eol1", tok))
