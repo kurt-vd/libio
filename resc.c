@@ -72,6 +72,10 @@ int libio_take_resource(const char *uri, const char *cid, double value)
 	int namelen;
 	struct sockaddr_storage name;
 
+	if (!uri)
+		/* ignore, make it easy to use */
+		return 0;
+
 	namelen = netio_strtosockname(uri, &name, AF_UNIX);
 	if (namelen <= 0) {
 		elog(LOG_ERR, 0, "bad LISTENSPEC '%s'", uri);

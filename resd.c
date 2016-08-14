@@ -122,6 +122,8 @@ static void lost_remote(void *dat)
 
 	/* accounting */
 	maxavail += ptr->value;
+	elog(LOG_NOTICE, 0, "'%s' lost, remain %lf",
+			ptr->cid, maxavail);
 
 	/* free memory */
 	free(ptr->cid);
@@ -218,6 +220,9 @@ static int rescontrol(int argc, char *argv[])
 				sprintf(rdat, "*nack %lf", remote->value);
 			} else {
 				maxavail -= value - remote->value;
+				if (value != remote->value)
+				elog(LOG_NOTICE, 0, "'%s' need %lf (was %lf), remain %lf",
+						remote->cid, value, remote->value, maxavail);
 				remote->value = value;
 				sprintf(rdat, "*ack %lf", remote->value);
 			}
