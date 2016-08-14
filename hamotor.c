@@ -52,7 +52,6 @@ struct link {
 static struct args {
 	int verbose;
 	struct link *links;
-	struct link *current;
 	int in[MAX_IN]; /* common input(s) */
 	int nin;
 	char *instr[MAX_IN];
@@ -69,13 +68,6 @@ static void btn_down_timer(void *dat)
 {
 	long_press_pending = 1;
 	long_press_event = 1;
-}
-
-/* switch */
-static void motor_select_timer(void *dat)
-{
-	/* reset motor selection */
-	s.current = NULL;
 }
 
 /* motor direction caching */
@@ -113,7 +105,7 @@ static const char *posname(const char *str)
 
 static int hamotor(int argc, char *argv[])
 {
-	int opt, short_press_event, j;
+	int opt, short_press_event, long_press_up, j;
 	char *sep, *tmpstr;
 	struct link *lnk;
 	double value;
@@ -174,9 +166,9 @@ static int hamotor(int argc, char *argv[])
 		free(tmpstr);
 	}
 
-	short_press_event = 0;
 	/* main ... */
 	while (1) {
+		short_press_event = 0;
 		/* determine local input */
 		for (j = 0; j < s.nin; ++j) {
 			if (!iopar_dirty(s.in[j])) {
@@ -187,6 +179,7 @@ static int hamotor(int argc, char *argv[])
 			} else if (get_iopar(s.in[j]) < 0.5) {
 				libt_remove_timeout(btn_down_timer, NULL);
 				short_press_event = !long_press_pending;
+				long_press_up = long_press_pending;
 				long_press_pending = 0;
 				break;
 			}
@@ -222,22 +215,20 @@ static int hamotor(int argc, char *argv[])
 		}
 
 		/* handle clicks */
-		if (long_press_event) {
-			/* deal with long-press timers */
-			libt_remove_timeout(motor_select_timer, NULL);
-			libt_add_timeout(5, motor_select_timer, NULL);
-			s.current = s.current ? s.current->next : s.links;
+		if (long_press_up) {
+			/* long-press stopped: stop motors */
+			for (lnk = s.links; lnk; lnk = lnk->next) {
+				/* change direction of all motors */
+				set_iopar(lnk->dmot, 0);
+				set_iopar(lnk->pdmot, 0);
+			}
 		}
 
 		if (short_press_event || long_press_event) {
 			/* movement change requested. */
-			value = get_new_dir(s.current ?: s.links);
+			value = get_new_dir(s.links);
 
-			if (s.current) {
-				set_iopar(s.current->dmot, value);
-				set_iopar(s.current->pdmot, get_iopar(s.current->dmot));
-				remember_dir(s.current, value);
-			} else for (lnk = s.links; lnk; lnk = lnk->next) {
+			for (lnk = s.links; lnk; lnk = lnk->next) {
 				/* change direction of all motors */
 				set_iopar(lnk->dmot, value);
 				set_iopar(lnk->pdmot, get_iopar(lnk->dmot));
