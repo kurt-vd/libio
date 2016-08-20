@@ -4,7 +4,10 @@ POWERLED=/sys/class/leds/power
 
 case "$1" in
 services)
-	echo "direct veluxg velux fancy abort"
+	echo "24V direct veluxg velux fancy abort"
+	;;
+24V)
+	exec io resd unix:@24V 2.2
 	;;
 direct)
 	# main io switches to control outputs
