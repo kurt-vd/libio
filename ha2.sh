@@ -25,7 +25,7 @@ veluxg)
 	;;
 velux)
 	# velux gordijn
-	exec io hamotor -lunix:@velux -i igang2 +hi=oveluxh
+	exec io hamotor -lunix:@velux -i igang2 +hi=oveluxh +lo=oveluxl
 	;;
 fancy)
 	exec io ha2addons -l unix:@ha2+
