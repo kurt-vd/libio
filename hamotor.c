@@ -52,7 +52,6 @@ struct link {
 static struct args {
 	int verbose;
 	struct link *links;
-	struct link *current;
 	int in[MAX_IN]; /* common input(s) */
 	int nin;
 	char *instr[MAX_IN];
@@ -69,13 +68,6 @@ static void btn_down_timer(void *dat)
 {
 	long_press_pending = 1;
 	long_press_event = 1;
-}
-
-/* switch */
-static void motor_select_timer(void *dat)
-{
-	/* reset motor selection */
-	s.current = NULL;
 }
 
 /* motor direction caching */
@@ -229,26 +221,18 @@ static int hamotor(int argc, char *argv[])
 		}
 
 		/* handle clicks */
-		if (long_press_event) {
-			/* deal with long-press timers */
-			libt_remove_timeout(motor_select_timer, NULL);
-			libt_add_timeout(5, motor_select_timer, NULL);
-			s.current = s.current ? s.current->next : s.links;
-		}
-
 		if (short_press_event || long_press_event) {
 			/* movement change requested. */
-			value = get_new_dir(s.current ?: s.links);
+			value = get_new_dir(s.links);
 
-			if (s.current) {
-				set_iopar(s.current->dmot, value);
-				set_iopar(s.current->pdmot, get_iopar(s.current->dmot));
-				remember_dir(s.current, value);
-			} else for (lnk = s.links; lnk; lnk = lnk->next) {
+			for (lnk = s.links; lnk; lnk = lnk->next) {
 				/* change direction of all motors */
 				set_iopar(lnk->dmot, value);
 				set_iopar(lnk->pdmot, get_iopar(lnk->dmot));
 				remember_dir(lnk, value);
+				if (long_press_event)
+					/* only first motor */
+					break;
 			}
 		}
 
