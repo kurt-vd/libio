@@ -86,9 +86,16 @@ static void remember_dir(struct link *lnk, double dir)
 
 static double get_new_dir(struct link *lnk)
 {
-	int cdir = speed2bool(get_iopar(lnk->dmot));
+	struct link *saved = lnk;
 
-	return cdir ? 0 : -lnk->lastdir;
+	/* test if any motor is moving. stop it first */
+	for (lnk = s.links; lnk; lnk = lnk->next) {
+		if (speed2bool(get_iopar(lnk->dmot)))
+			return 0;
+	}
+	/* find new direction for lnk */
+	lnk = saved;
+	return speed2bool(get_iopar(lnk->dmot)) ? 0 : -lnk->lastdir;
 }
 
 /* create optional parameter */
