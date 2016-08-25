@@ -95,6 +95,8 @@ static double get_new_dir(struct link *lnk)
 	}
 	/* find new direction for lnk */
 	lnk = saved;
+	if (!lnk)
+		return 0;
 	return speed2bool(get_iopar(lnk->dmot)) ? 0 : -lnk->lastdir;
 }
 
@@ -152,7 +154,7 @@ static int hamotor(int argc, char *argv[])
 	for (j = 0; j < s.nin; ++j) {
 		s.in[j] = create_iopar(s.instr[j]);
 		if (s.in[j] < 0)
-			elog(LOG_CRIT, 0, "failed to create %s", s.instr[j]);
+			elog(LOG_WARNING, 0, "failed to create %s", s.instr[j]);
 	}
 
 	for (; optind < argc; ++optind) {
@@ -162,22 +164,33 @@ static int hamotor(int argc, char *argv[])
 			elog(LOG_CRIT, 0, "bad spec '%s', missing '='", tmpstr);
 		*sep++ = 0;
 		lnk = zalloc(sizeof(*lnk));
+		lnk->dmot = create_iopar(sep);
+		if (lnk->dmot < 0) {
+			free(lnk);
+			free(tmpstr);
+			continue;
+		}
+		lnk->pmot = create_iopar("pmotor:");
 		lnk->pdmot = create_ioparf("netio:%s", tmpstr);
 		lnk->ppmot = create_ioparf("netio:%s", posname(tmpstr));
-		lnk->dmot = create_iopar(sep);
-		lnk->pmot = create_iopar("pmotor:");
 		lnk->next = s.links;
 		s.links = lnk;
 		/* preset lastdir to a nonzero default */
 		lnk->lastdir = -1;
 		free(tmpstr);
 	}
+	if (!s.links)
+		/* no parameters */
+		elog(LOG_WARNING, 0, "no motors, what will I do?");
 
 	short_press_event = 0;
 	/* main ... */
 	while (1) {
 		/* determine local input */
 		for (j = 0; j < s.nin; ++j) {
+			if (s.in[j] < 0)
+				/* ignore */
+				continue;
 			if (!iopar_dirty(s.in[j])) {
 				/* nothing */
 			} else if (get_iopar(s.in[j]) > 0.5) {
