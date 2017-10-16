@@ -24,11 +24,11 @@ direct)
 	;;
 veluxg)
 	# velux gordijn
-	exec io hamotor -lunix:@veluxg -i igang4 -i iwest2 -i izuid2 +hi=oveluxhg +lo=oveluxlg
+	exec io hamotor -lunix:@veluxg -i iveluxg1 -i iveluxg2 -i iveluxg3 +hi=oveluxhg +lo=oveluxlg
 	;;
 velux)
 	# velux gordijn
-	exec io hamotor -lunix:@velux -i igang2 +hi=oveluxh +lo=oveluxl
+	exec io hamotor -lunix:@velux -i ivelux1 -i ivelux2 -i ivelux3 +hi=oveluxh +lo=oveluxl
 	;;
 fancy)
 	exec io ha2addons -l unix:@ha2+
